@@ -1,0 +1,81 @@
+@font-face {
+  font-family: arboto;
+  src: url("../../public/assets/fonts/Araboto\ Bold\ 400.ttf");
+};
+
+* {
+  font-family:  arboto !important;
+}
+.bgPos {
+  background-position-x: center;
+}
+.phoneContainer {
+  width: 100%;
+}
+.phoneInput {
+  width: 100% !important;
+}
+.drop_area drop_zone{
+    background-color: red !important;
+}
+.myImage{
+  width: 100%;
+  object-fit: cover;
+}
+
+.active{
+  background-color: #822727;
+  color: white;
+}
+.in-avtive{
+ color: black;
+  background-color: white;
+}
+ .galley{
+  width: 350px !important;
+ }
+ .swiper {
+  width: 100%;
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+
+.swiper-slide {
+  background-position: center;
+  background-size: cover;
+  width: 300px;
+  height: 300px;
+}
+
+.swiper-slide img {
+  display: block;
+  width: 100%;
+}
+html[lang="ar"] .css-1pq15d{
+  right:93%
+}
+html[lang="ar"] .searchIcon{
+  left:20px;
+}
+html[lang="en"] .searchIcon{
+  right:20px;
+}
+ .AboutText{
+  direction:rtl;
+}
+@media screen and (max-width:400px) {
+  .checkoutContainer{
+    padding:10px !important;
+  }
+  p.chakra-text {
+    font-size: 18px!important;
+    
+  }
+  .increaseBtn,.decreaseBtn{
+    height: 20px !important;
+    width: auto !important;
+  }
+  .buttonsBox{
+    padding-top: 5px  !important;
+  }
+}
