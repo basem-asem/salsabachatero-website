@@ -127,6 +127,8 @@ export default function Home() {
       alignItems="center"
       justifyContent="center"
       flexDirection="column"
+      overflow={"auto"}
+      height={"100vh"}
       background="linear-gradient(180deg, rgba(75, 57, 239, 1) 30%, rgba(238, 139, 96, 1) 100%)"
     >
       <Title name={"Login"} />
