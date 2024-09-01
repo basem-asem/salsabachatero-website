@@ -26,18 +26,13 @@ export default function App({ Component, pageProps }) {
     document.querySelector("html").setAttribute("dir", dir);
     document.querySelector("html").setAttribute("lang", lang);
   }, [router?.locale]);
-  const showHeader = !['/login', '/register','/verification','/forgot','/','/contactUs'].includes(router.pathname);
   return (
     <ChakraProvider>
       <Provider store={store}>
         <Layout>
-         {
-          showHeader && <Navbar/>
-         }
+         
           <Component {...pageProps} />
-          {
-          showHeader &&  <Footer/>
-         }
+         
          <ScrollToTopButton/>
         </Layout>
       </Provider>

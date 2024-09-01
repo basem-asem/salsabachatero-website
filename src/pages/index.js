@@ -34,8 +34,6 @@ export default function Home() {
           const userdocRef = doc(db, "users", userresult.user.uid);
           const userdocSnap = await getDoc(userdocRef);
           if (userdocSnap.exists()) {
-            const { Role } = userdocSnap.data();
-            if (Role === "User") {
               setMessagetype("success");
               setErrorMessage(t("alert.message.login"));
               setErrorAlert(true);
@@ -48,11 +46,6 @@ export default function Home() {
                 router.push("/home");
                 setInLogin(false);
               }, 2000);
-            } else {
-              setInLogin(false);
-              setErrorMessage(t("login.invalid"));
-              setErrorAlert(true);
-            }
           } else {
             setInLogin(false);
             setErrorMessage(t("login.invalid"));

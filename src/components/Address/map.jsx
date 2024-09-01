@@ -1,6 +1,7 @@
 /**/
 'use client';
 
+import { Box } from "@chakra-ui/react";
 import { MapComponent } from "./Gmap";
 import { MapProvider } from "./map-provider";
 
@@ -13,10 +14,10 @@ import { MapProvider } from "./map-provider";
 // Define a function component called MapProvider that takes a children prop
 export function AdressMap() {
 
-  return (<div id="map-block" style={{display:"block",height:"450px", marginTop:"5px",transition:"height 3s"}}>
+  return (<Box id="map-block" maxW={400}>
     <MapProvider>
       <MapComponent/>
     </MapProvider>
-        </div>)
+        </Box>)
   
 }           
