@@ -15,7 +15,7 @@ const Index = () => {
   const [userData, setUserData] = useState({});
   const dispatch = useDispatch();
   const toast = useToast();
-const router = useRouter()
+  const router = useRouter();
   let manImg =
     "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWFufGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60";
 
@@ -98,29 +98,88 @@ const router = useRouter()
       >
         Salsabachatero
       </Text>
-      <Text color="white" fontSize={30} fontWeight={600} textAlign={"center"}>
-        Where do you want to dance?
-      </Text>
-      <Box display={"flex"} justifyContent={"center"} alignItems={"center"} gap={3}>
-        {showplaces && (
-          <Button onClick={() => setShowplaces(!showplaces)} borderRadius={"3xl"} px={8}>
-            Enter your city
-          </Button>
-        )}
-        {!showplaces && <AdressMap />}
-        <Icon
-          as={IoIosPin}
-          border={"1px solid #4b39ef"}
-          borderRadius={"50%"}
-          bgColor={"white"}
-          w={8}
-          h={8}
-          color="black"
-          onClick={handleLocationUpdate}
-          cursor="pointer"
-        />
+      {/* the center of the page */}
+      <Box
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        gap={3}
+        flexDirection={"column"}
+      >
+        <Text color="white" fontSize={30} fontWeight={600} textAlign={"center"}>
+          Where do you want to dance?
+        </Text>
+        <Box
+          display={"flex"}
+          justifyContent={"center"}
+          alignItems={"center"}
+          gap={2}
+        >
+          {showplaces && (
+            <Button
+              onClick={() => setShowplaces(!showplaces)}
+              borderRadius={"3xl"}
+              px={8}
+              maxW={"fit-content"}
+            >
+              Enter your city
+            </Button>
+          )}
+          {!showplaces && <AdressMap />}
+          <Icon
+            as={IoIosPin}
+            border={"1px solid #4b39ef"}
+            borderRadius={"50%"}
+            bgColor={"white"}
+            w={8}
+            h={8}
+            color="black"
+            onClick={handleLocationUpdate}
+            cursor="pointer"
+          />
+        </Box>
+        <Button
+          maxW={"fit-content"}
+          px={8}
+          borderRadius={"3xl"}
+          mx={"auto"}
+          onClick={() => router.push("/")}
+        >
+          Continue
+        </Button>
       </Box>
-      <Button maxW={150} px={8} borderRadius={"3xl"} mx={"auto"} onClick={() => router.push("/")}>Continue</Button>
+      <Box
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        flexDirection={"column"}
+        gap={3}
+        pt={15}
+        mt={20}
+      >
+        <Text color="white" fontSize={20} fontWeight={500} textAlign={"center"}>
+          You can publish your event here
+        </Text>
+        <Button
+          maxW={"fit-content"}
+          px={8}
+          borderRadius={"3xl"}
+          mx={"auto"}
+          onClick={() => router.push("/")}
+        >
+          Publish your event
+        </Button>
+        <Button
+          maxW={"fit-content"}
+          px={8}
+          mt={7}
+          borderRadius={"3xl"}
+          mx={"auto"}
+          onClick={() => router.push("/")}
+        >
+          Your Favurite events
+        </Button>
+      </Box>
     </Box>
   );
 };

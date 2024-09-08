@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box, Button, Input, Avatar, Text, Icon } from "@chakra-ui/react";
 import { MdPerson } from "react-icons/md";
-const FileUpload = ({ setSelectedFile, selectedFile }) => {
+const FileUpload = ({ setSelectedFile, selectedFile ,square}) => {
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -22,7 +22,7 @@ const FileUpload = ({ setSelectedFile, selectedFile }) => {
         <Box
           as="span"
           display="inline-block"
-          borderRadius="full"
+          borderRadius={square=="true"?"10px": "full"}
           border="4px solid teal"
           width="120px"
           height="120px"

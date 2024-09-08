@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Box, Button, HStack, Heading, Text, Input, Select } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  HStack,
+  Heading,
+  Text,
+  Input,
+  Select,
+} from "@chakra-ui/react";
 import Link from "next/link";
 import useTranslation from "@/hooks/useTranslation";
 import Head from "next/head";
@@ -201,38 +209,36 @@ const Index = () => {
               {errors.name.message}
             </p>
           )}
-     
           <Controller
-    name="phone"
-    control={control}
-    defaultValue=""
-    render={({ field }) => (
-      <PhoneInput
-        country={"at"}
-        {...field}
-        containerClass="phoneContainer"
-        buttonStyle={
-          router.locale === "ar"
-            ? {
-                paddingRight: "22px",
-              }
-            : {
-                paddingLeft: "8px",
-              }
-        }
-        inputClass="phoneInput"
-        inputStyle={{ paddingBlock: "22px" }}
-        inputProps={{
-          autoFocus: false,
-        }}
-        // Registering the input for validation
-        {...register("phone", { required: t("teacher.error.phone") })}
-      />
-    )}
-  />
-          {errors.phone && (
-            <span style={{ color: "#852830" }}>{errors.phone.message}</span>
-          )}
+            name="phone"
+            control={control}
+            defaultValue=""
+            render={({ field }) => (
+              <PhoneInput
+                country={"at"}
+                {...field}
+                containerClass="phoneContainer"
+                buttonStyle={
+                  router.locale === "ar"
+                    ? {
+                        paddingRight: "22px",
+                      }
+                    : {
+                        paddingLeft: "8px",
+                      }
+                }
+                inputClass="phoneInput"
+                inputStyle={{ paddingBlock: "22px" }}
+                inputProps={{
+                  name: "phone",
+                  required: false,
+                  autoFocus: false,
+                }}
+                // Registering the input for validation
+                {...register("phone")}
+              />
+            )}
+          />
           {/* Error message for phone field */}
           {errors.phone && (
             <span style={{ color: "#852830" }}>{errors.phone.message}</span>

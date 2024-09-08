@@ -8,33 +8,50 @@ import {
   InputGroup,
   Stack,
   Select,
-  SimpleGrid,
   CircularProgress,
+  Textarea,
+  Icon,
+  Checkbox,
+  TagLabel,
+  Text,
 } from "@chakra-ui/react";
+import { FaRegClock, FaPaperclip } from "react-icons/fa";
 import React, { useEffect, useState } from "react";
-import useTranslation from "@/hooks/useTranslation";
-import { Create_Update_Doc, getStaticData } from "@/firebase/firebaseutils";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import { AdressMap } from "@/components/Address/map";
+import { IoIosPin } from "react-icons/io";
+import { MultiSelect } from "chakra-multiselect";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import FileUpload from "../register/FileUpload";
 
-const index = () => {
-  const { t } = useTranslation();
-  const router = useRouter()
+const EventForm = () => {
+  const router = useRouter();
   const [info, setInfo] = useState([]);
+  const [showplaces, setShowplaces] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({
-    subject: '',
-    email: '',
-    name: '',
-    date: new Date(),
-    comment: ''
+    eventName: "",
+    entryPrice: "",
+    currency: "",
+    eventDescription: "",
+    address: "",
+    phoneNumber: "",
+    eventType: [],
+    eventPicture: "",
+    eventVideo: "",
+    startTime: "",
+    endTime: "",
   });
 
   useEffect(() => {
+    // Simulate fetching info from Firebase
     const fetchInfo = async () => {
       try {
-        const infosData = await getStaticData("App_Info");
-        setInfo(infosData);
+        // Fetch App_Info data here
+        setInfo([]); // Replace with fetched data
         setLoading(false);
       } catch (error) {
         console.error("Error fetching info:", error);
@@ -48,157 +65,317 @@ const index = () => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
+  const handleEventTypeChange = (e) => {
+    const { value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      eventType: prevData.eventType.includes(value)
+        ? prevData.eventType.filter((type) => type !== value)
+        : [...prevData.eventType, value],
+    }));
+  };
 
   const handleSubmit = async () => {
     try {
-      await Create_Update_Doc("contact_us", formData);
-      router.push("/login")
-      alert("Form submitted successfully!");
+      // Submit the form to Firebase
+      alert("Event added successfully!");
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error submitting event:", error);
     }
   };
 
+  const handleLocationUpdate = () => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { latitude, longitude } = position.coords;
+      fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyDbyqQs6fkB0ZKoVwBDd27042c0FjW1yaQ`
+      )
+        .then((res) => res.json())
+        .then((res) => {
+          const cityComponent = res.results[0].address_components?.find(
+            (ele) => ele.types[0] === "administrative_area_level_1"
+          );
+          const cityName = cityComponent?.long_name || "";
+
+          setCity(cityName);
+          localStorage.setItem("city", cityName);
+          localStorage.setItem("latitude", latitude);
+          localStorage.setItem("longitude", longitude);
+          dispatch(
+            setUserLocation({ lat: latitude, lng: longitude, city: cityName })
+          );
+
+          // Show success toast
+          toast({
+            title: "Location Updated",
+            description: `Your location has been updated to ${cityName}.`,
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+        });
+    });
+  };
   return (
     <>
       <Grid
-       display={"flex"} justifyContent={"center"} alignItems={"center"} my={'10px'}
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        my="10px"
       >
-         <Head>
-          <title>{"Contact Us"}</title>
+        <Head>
+          <title>Create Event</title>
         </Head>
         <Box
-        width={['auto','auto','50%']}
-        padding={['8px','16px']}
-         style={{
-          display: "flex",
-          alignItems: "center",
-          flexDirection: "column",
-          margin: "auto",
-          backgroundColor: "rgba(54, 46, 44, 0.1)",
-          border: "1px solid #868686",
-          borderRadius: "8px",
-        }}
+          width={["auto", "auto", "50%"]}
+          padding={["20px", "40px"]}
+          display="flex"
+          alignItems="center"
+          flexDirection="column"
+          margin="auto"
+          backgroundColor="#F6F6F6"
+          border="1px solid #E0E0E0"
+          borderRadius="12px"
+          boxShadow="0 2px 8px rgba(0, 0, 0, 0.1)"
         >
           <Heading
-            my="2"
-            fontSize={"1.4rem"}
-            color={"blackAlpha.800"}
-            fontWeight={400}
+            mb="5"
+            fontSize={30}
+            color="#f9cf58"
+            fontWeight={600}
+            fontFamily="Arial, sans-serif"
+            textAlign="center"
           >
-            
-            {t("navbar.contact")}
+            Salsabachatero
           </Heading>
-          <Divider />
-          <Stack spacing={4} my="5" w={"100%"}>
+          <Stack spacing={6} w="100%">
             {loading ? (
               <Grid
                 item
                 xs={12}
                 textAlign="center"
-                style={{ justifyContent: "center", display: "flex" }}
+                display="flex"
+                justifyContent="center"
               >
                 <CircularProgress isIndeterminate />
               </Grid>
             ) : (
-              <SimpleGrid>
-                <InputGroup border={"none"}>
-                  <label
-                    bg="none"
-                    style={{ width: "100%", fontSize: "18px", fontWeight: "500" }}
-                  >
-                    {t("what")}
-                    <Select
-                      name="subject"
-                      placeholder={t("contact.subject")}
-                      mt={"1rem"}
-                      borderColor={"blackAlpha.400"}
-                      value={formData.subject}
-                      onChange={handleChange}
-                    >
-                      {info.map((res, i) =>
-                        res.Feedback.map((feed, j) => (
-                          <option value={feed} key={j}>{feed}</option>
-                        ))
-                      )}
-                    </Select>
-                  </label>
+              <>
+                {/* Event Name */}
+                <InputGroup>
+                  <Input
+                    name="eventName"
+                    placeholder="Event Name"
+                    value={formData.eventName}
+                    onChange={handleChange}
+                    backgroundColor="#FFF"
+                    border="1px solid #CCC"
+                    borderRadius="8px"
+                    padding="16px"
+                    fontSize="1rem"
+                  />
                 </InputGroup>
-              </SimpleGrid>
+
+                {/* Entry Price and Currency */}
+                <InputGroup display="flex" alignItems={"center"}>
+                  <Input
+                    name="entryPrice"
+                    placeholder="Entry Price"
+                    value={formData.entryPrice}
+                    onChange={handleChange}
+                    backgroundColor="#FFF"
+                    border="1px solid #CCC"
+                    borderRadius="8px"
+                    padding="16px"
+                    fontSize="1rem"
+                  />
+                  <Select
+                    name="currency"
+                    placeholder="Currency"
+                    value={formData.currency}
+                    onChange={handleChange}
+                    ml="2"
+                    backgroundColor="#FFF"
+                    border="1px solid #CCC"
+                    borderRadius="8px"
+                    padding="8px"
+                    fontSize="1rem"
+                  >
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                  </Select>
+                </InputGroup>
+
+                {/* Event Description */}
+                <InputGroup>
+                  <Textarea
+                    name="eventDescription"
+                    placeholder="Event Description"
+                    value={formData.eventDescription}
+                    onChange={handleChange}
+                    backgroundColor="#FFF"
+                    border="1px solid #CCC"
+                    borderRadius="8px"
+                    padding="16px"
+                    fontSize="1rem"
+                    height="100px"
+                    resize="none"
+                  />
+                </InputGroup>
+
+                {/* Address */}
+
+                <Box
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  gap={2}
+                >
+                  {showplaces && (
+                    <Button
+                      onClick={() => setShowplaces(!showplaces)}
+                      borderRadius={"3xl"}
+                      px={8}
+                      maxW={"fit-content"}
+                    >
+                      Enter your city
+                    </Button>
+                  )}
+                  {!showplaces && <AdressMap />}
+                  <Icon
+                    as={IoIosPin}
+                    border={"1px solid #4b39ef"}
+                    borderRadius={"50%"}
+                    bgColor={"white"}
+                    w={8}
+                    h={8}
+                    color="black"
+                    onClick={handleLocationUpdate}
+                    cursor="pointer"
+                  />
+                </Box>
+                {/* Phone Number */}
+                <PhoneInput
+                  inputProps={{
+                    name: "phone",
+                    required: false,
+                    autoFocus: false,
+                  }}
+                  country={"at"}
+                  name="phoneNumber"
+                  onChange={handleChange}
+                  containerClass="phoneContainer"
+                  buttonStyle={
+                    router.locale === "ar"
+                      ? {
+                          paddingRight: "22px",
+                        }
+                      : {
+                          paddingLeft: "8px",
+                        }
+                  }
+                  inputClass="phoneInput"
+                  inputStyle={{
+                    paddingBlock: "22px",
+                    backgroundColor: "#FFF",
+                    border: "1px solid #CCC",
+                    borderRadius: "8px",
+                  }}
+                />
+
+                {/* Event Type - Multiple Selection */}
+
+                <Box border={"1px solid #ccc"} borderRadius={8} p={2}>
+                  <Text>Event Type</Text>
+                  <Stack spacing={2} direction="row" padding="8px">
+                    <Checkbox
+                      value="Salsa"
+                      isChecked={formData.eventType.includes("Salsa")}
+                      onChange={handleEventTypeChange}
+                    >
+                      Salsa
+                    </Checkbox>
+                    <Checkbox
+                      value="Bachata"
+                      isChecked={formData.eventType.includes("Bachata")}
+                      onChange={handleEventTypeChange}
+                    >
+                      Bachata
+                    </Checkbox>
+                    <Checkbox
+                      value="Kizomba"
+                      isChecked={formData.eventType.includes("Kizomba")}
+                      onChange={handleEventTypeChange}
+                    >
+                      Kizomba
+                    </Checkbox>
+                  </Stack>
+                </Box>
+
+                {/* Attach Event Picture */}
+                <InputGroup display="flex" alignItems="center">
+                <FileUpload
+                square="true"
+            setSelectedFile={setSelectedFile}
+            selectedFile={selectedFile}
+          />
+                </InputGroup>
+
+                {/* Attach Event Video */}
+                <InputGroup display="flex" alignItems="center">
+                  <FaPaperclip size={20} style={{ marginRight: "10px" }} />
+                  <span style={{ fontSize: "1rem", color: "#333" }}>
+                    Attach Event Video
+                  </span>
+                </InputGroup>
+
+                {/* Start and End Time */}
+                <InputGroup display="flex" justifyContent="space-between">
+                  <Button
+                    leftIcon={<FaRegClock />}
+                    backgroundColor="#E53935"
+                    color="#FFF"
+                    padding="16px"
+                    borderRadius="8px"
+                    fontSize="1rem"
+                    _hover={{ backgroundColor: "#D32F2F" }}
+                  >
+                    Start Time
+                  </Button>
+                  <Button
+                    leftIcon={<FaRegClock />}
+                    backgroundColor="#E53935"
+                    color="#FFF"
+                    padding="16px"
+                    borderRadius="8px"
+                    fontSize="1rem"
+                    _hover={{ backgroundColor: "#D32F2F" }}
+                    ml="4"
+                  >
+                    End Time
+                  </Button>
+                </InputGroup>
+              </>
             )}
-            <InputGroup border={"none"}>
-              <label
-                bg="none"
-                style={{ width: "100%", fontSize: "18px", fontWeight: "500" }}
-                border={"none"}
-              >
-                {t("login.email")}
-                <Input
-                  name="email"
-                  mt={"1rem"}
-                  type="text"
-                  _focusVisible={"none"}
-                  borderColor={"blackAlpha.400"}
-                  placeholder={t("login.email")}
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </label>
-            </InputGroup>
-            <InputGroup border={"none"}>
-              <label
-                bg="none"
-                style={{ width: "100%", fontSize: "18px", fontWeight: "500" }}
-                border={"none"}
-              >
-                {t("teacher.form.name")}
-                <Input
-                  name="name"
-                  mt={"1rem"}
-                  type="text"
-                  _focusVisible={"none"}
-                  borderColor={"blackAlpha.400"}
-                  placeholder={t("teacher.form.name")}
-                  value={formData.name}
-                  onChange={handleChange}
-                />
-              </label>
-            </InputGroup>
-            <InputGroup border={"none"}>
-              <label
-                bg="none"
-                style={{ width: "100%", fontSize: "18px", fontWeight: "500" }}
-                border={"none"}
-              >
-                {t("cotact.comment")}
-                <Input
-                  name="comment"
-                  mt={"1rem"}
-                  type="text"
-                  _focusVisible={"none"}
-                  borderColor={"blackAlpha.400"}
-                  placeholder={t("cotact.comment")}
-                  value={formData.comment}
-                  onChange={handleChange}
-                />
-              </label>
-            </InputGroup>
           </Stack>
           <Button
-            bg="#822727"
+            bg="#E53935"
             w="full"
-            my="5"
-            color={"white"}
-            _hover={{ bg: "red.600" }}
+            my="6"
+            color="white"
+            padding="16px"
+            fontSize="1.2rem"
+            borderRadius="8px"
+            _hover={{ bg: "#D32F2F" }}
             onClick={handleSubmit}
           >
-            {t("fomr.submit")}
+            Add Event
           </Button>
         </Box>
       </Grid>
-      
     </>
   );
 };
 
-export default index;
+export default EventForm;
