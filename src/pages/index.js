@@ -122,7 +122,7 @@ export default function Home() {
       flexDirection="column"
       overflow={"auto"}
       height={"100vh"}
-      background="linear-gradient(180deg, rgba(75, 57, 239, 1) 30%, rgba(238, 139, 96, 1) 100%)"
+      backgroundImage="url('/assets/backgroundImage.png')"
     >
       <Title name={"Login"} />
       <Head>

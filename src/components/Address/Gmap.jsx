@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Input, List, ListItem, useToast } from "@chakra-ui/react";
+import { Box, Button, Input, List, ListItem, useToast } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import usePlacesAutocomplete, {
   getGeocode,
@@ -13,7 +13,7 @@ const defaultMapCenter = {
   lng: 29.924526,
 };
 
-export let PlacesAutocomplete = ({ setMapLoc, setResult }) => {
+export let PlacesAutocomplete = ({ setMapLoc, setResult ,setShowplaces}) => {
   const { value, setValue, suggestions: { status, data }, clearSuggestions } = usePlacesAutocomplete();
 
   const renderSuggestions = () => {
@@ -55,7 +55,27 @@ export let PlacesAutocomplete = ({ setMapLoc, setResult }) => {
   };
 
   return (
-    <Box>
+    <Box
+      position="fixed" // Fixed position to ensure it stays in the middle
+      top="50%"        // Center vertically
+      left="50%"       // Center horizontally
+      transform="translate(-50%, -50%)" // Offset by 50% to achieve perfect centering
+      zIndex="1000"    // Make sure it pops up over everything else
+      bgColor="#00000052"       // Background color for the popup
+      p={4}            // Padding for spacing
+      borderRadius="md" // Rounded corners
+      boxShadow="lg"   // Shadow for popup effect
+      w="100%"          // Width of the popup
+      h="100%"
+      display={"flex"}
+      justifyContent="center"
+      alignItems="center"
+      gap={2}
+      flexDirection={"column"}
+
+    >
+      <Box w={["100%","50%"]} textAlign={"center"} display={"flex"} alignItems={"center"}>
+
       <Input
         value={value}
         onChange={handleInput}
@@ -67,11 +87,23 @@ export let PlacesAutocomplete = ({ setMapLoc, setResult }) => {
         color="black"
         borderColor="transparent"
         _placeholder={{ color: 'gray.300' }}
-      />
+        />
+        <Button ml={5} onClick={() => setShowplaces(true)}>
+          Close
+        </Button>
+        </Box>
       {status === "OK" && (
-        <List>
+        <List w={["100%","50%"]} >
           {renderSuggestions().map((suggestion, index) => (
-            <ListItem key={index} w={"100%"}>
+            <ListItem
+              key={index}
+              w="100%"
+              p={2}
+              borderRadius={"8px"}
+              bg="gray.50"
+              borderBottom="1px solid #ccc"
+              _hover={{ bg: "gray.200", cursor: "pointer" }}
+            >
               {suggestion}
             </ListItem>
           ))}
@@ -81,7 +113,7 @@ export let PlacesAutocomplete = ({ setMapLoc, setResult }) => {
   );
 };
 
-const MapComponent = () => {
+const MapComponent = ({setShowplaces}) => {
   const [mapLoc, setMapLoc] = useState(defaultMapCenter);
   const [address, setAddress] = useState("Alexandria, Eg");
   const [city, setCity] = useState("Alex");
@@ -106,6 +138,7 @@ const MapComponent = () => {
           duration: 5000,
           isClosable: true,
         });
+        setShowplaces(true);
       }
     }
   }, [result]);
@@ -121,7 +154,7 @@ const MapComponent = () => {
 
   return (
     <div>
-      <PlacesAutocomplete setMapLoc={setMapLoc} setResult={setResult} />
+      <PlacesAutocomplete setMapLoc={setMapLoc} setResult={setResult} setShowplaces={setShowplaces}/>
     </div>
   );
 };

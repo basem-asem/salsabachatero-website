@@ -32,6 +32,7 @@ const EventForm = () => {
   const [showplaces, setShowplaces] = useState(true);
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedVid, setSelectedVid] = useState(null);
   const [formData, setFormData] = useState({
     eventName: "",
     entryPrice: "",
@@ -77,6 +78,7 @@ const EventForm = () => {
 
   const handleSubmit = async () => {
     try {
+      console.log(formData)
       // Submit the form to Firebase
       alert("Event added successfully!");
     } catch (error) {
@@ -122,7 +124,7 @@ const EventForm = () => {
         display={"flex"}
         justifyContent={"center"}
         alignItems={"center"}
-        my="10px"
+        backgroundImage="url('/assets/backgroundImage.png')"
       >
         <Head>
           <title>Create Event</title>
@@ -134,6 +136,7 @@ const EventForm = () => {
           alignItems="center"
           flexDirection="column"
           margin="auto"
+          my={10}
           backgroundColor="#F6F6F6"
           border="1px solid #E0E0E0"
           borderRadius="12px"
@@ -242,7 +245,7 @@ const EventForm = () => {
                       Enter your city
                     </Button>
                   )}
-                  {!showplaces && <AdressMap />}
+                  {!showplaces && <AdressMap setShowplaces={setShowplaces}/>}
                   <Icon
                     as={IoIosPin}
                     border={"1px solid #4b39ef"}
@@ -258,7 +261,7 @@ const EventForm = () => {
                 {/* Phone Number */}
                 <PhoneInput
                   inputProps={{
-                    name: "phone",
+                    name: "phoneNumber",
                     required: false,
                     autoFocus: false,
                   }}
@@ -314,47 +317,50 @@ const EventForm = () => {
                 </Box>
 
                 {/* Attach Event Picture */}
-                <InputGroup display="flex" alignItems="center">
-                <FileUpload
-                square="true"
-            setSelectedFile={setSelectedFile}
-            selectedFile={selectedFile}
-          />
+                <InputGroup display="flex" alignItems="start" gap={2} flexDirection={"column"} >
+                <Text>Upload event image</Text>
+                  <FileUpload
+                    square="true"
+                    setSelectedFile={setSelectedFile}
+                    selectedFile={selectedFile}
+                  />
                 </InputGroup>
 
                 {/* Attach Event Video */}
-                <InputGroup display="flex" alignItems="center">
-                  <FaPaperclip size={20} style={{ marginRight: "10px" }} />
-                  <span style={{ fontSize: "1rem", color: "#333" }}>
-                    Attach Event Video
-                  </span>
+                <InputGroup display="flex" alignItems="start" gap={2} flexDirection={"column"} >
+                <Text>Upload event video</Text>
+                  <FileUpload
+                    square="true"
+                    setSelectedFile={setSelectedVid}
+                    selectedFile={selectedVid}
+                    videos={true}
+                  />
                 </InputGroup>
 
                 {/* Start and End Time */}
-                <InputGroup display="flex" justifyContent="space-between">
-                  <Button
-                    leftIcon={<FaRegClock />}
-                    backgroundColor="#E53935"
-                    color="#FFF"
+                <InputGroup display="flex" justifyContent="space-between" gap={5} flexDirection={["column","column","column","column","row"]}>
+                  <Box
+                    backgroundColor="#eee"
+                    color="#000"
                     padding="16px"
                     borderRadius="8px"
                     fontSize="1rem"
-                    _hover={{ backgroundColor: "#D32F2F" }}
+                    _hover={{ backgroundColor: "#ccc" }}
                   >
-                    Start Time
-                  </Button>
-                  <Button
-                    leftIcon={<FaRegClock />}
-                    backgroundColor="#E53935"
-                    color="#FFF"
+                    <Text>Start Time</Text>
+                    <Input type="datetime-local" name="startTime" />
+                  </Box>
+                  <Box
+                    backgroundColor="#eee"
+                    color="#000"
                     padding="16px"
                     borderRadius="8px"
                     fontSize="1rem"
-                    _hover={{ backgroundColor: "#D32F2F" }}
-                    ml="4"
+                    _hover={{ backgroundColor: "#ccc" }}
                   >
-                    End Time
-                  </Button>
+                    <Text>End Time</Text>
+                    <Input type="datetime-local" name="endTime" />
+                  </Box>
                 </InputGroup>
               </>
             )}

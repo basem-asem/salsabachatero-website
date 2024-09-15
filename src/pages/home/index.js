@@ -7,6 +7,9 @@ import Title from "@/components/Title";
 import { AdressMap } from "@/components/Address/map";
 import { IoIosPin } from "react-icons/io";
 import { useRouter } from "next/router";
+import { getDistance } from "geolib";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/firebase/firebase";
 
 const Index = () => {
   const { t } = useTranslation();
@@ -60,6 +63,64 @@ const Index = () => {
     });
   };
 
+
+  async function getEvents(lat, long) {
+    try {
+      const currentTime = new Date();
+  
+      // Query events that have a future date
+      const eventsQuery = query(
+        collection(db, "events"),
+        where("date", ">=", currentTime)
+      );
+      
+      const eventsSnapshot = await getDocs(eventsQuery);
+      const eventsInRange = [];
+  
+      // Loop through events and calculate the distance
+      eventsSnapshot.forEach((doc) => {
+        const eventData = doc.data();
+        
+        if (eventData.latlng) {
+          const eventLocation = {
+            latitude: eventData.latlng.latitude,
+            longitude: eventData.latlng.longitude,
+          };
+  
+          // Calculate the distance between the event and the user's location
+          const distance = getDistance(
+            { latitude: lat, longitude: long },
+            { latitude: eventLocation.latitude, longitude: eventLocation.longitude }
+          );
+  
+          const km = distance / 1000; // Convert distance to kilometers
+  
+          // If the event is within 20 kilometers, add its ID to the array
+          if (km <= 20) {
+            eventsInRange.push(doc.id);
+          }
+        }
+      });
+  
+      // Return the array of event IDs
+      return eventsInRange;
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      return [];
+    }
+  }
+    const handlecontinue = () => {
+    const lat = localStorage.getItem("latitude");
+    const long = localStorage.getItem("longitude");
+    getEvents(lat, long).then((events) => {
+      const eventIdsString = events.join(',');
+
+      router.push({
+        pathname: '/events', // the target page
+        query: { eventIds: eventIdsString },
+      });
+    });
+  };
   return (
     <Box
       display="flex"
@@ -70,7 +131,7 @@ const Index = () => {
       overflow={"auto"}
       height={"100vh"}
       gap={15}
-      background="linear-gradient(180deg, rgba(75, 57, 239, 1) 30%, rgba(238, 139, 96, 1) 100%)"
+      backgroundImage="url('/assets/backgroundImage.png')"
     >
       <Title name={"Home"} />
       <Box
@@ -81,8 +142,8 @@ const Index = () => {
         top={0}
         left={0}
       >
-        <Avatar size={"2xl"} src={userData["photo_url"] || manImg} />
-        <Text fontSize={"20px"} my="1" fontWeight={400} pl={8}>
+        <Avatar size={"md"} src={userData["photo_url"] || manImg} ml={5} />
+        <Text fontSize={"18px"} color="white" fontWeight={400} pl={5}>
           {userData["display_name"]}
         </Text>
       </Box>
@@ -91,10 +152,6 @@ const Index = () => {
         fontSize={30}
         fontWeight={600}
         textAlign={"center"}
-        pos={"absolute"}
-        top={10}
-        right={"50%"}
-        style={{ transform: "translate(50%)" }}
       >
         Salsabachatero
       </Text>
@@ -125,7 +182,8 @@ const Index = () => {
               Enter your city
             </Button>
           )}
-          {!showplaces && <AdressMap />}
+          {!showplaces && <AdressMap setShowplaces={setShowplaces}/>}
+          
           <Icon
             as={IoIosPin}
             border={"1px solid #4b39ef"}
@@ -143,7 +201,7 @@ const Index = () => {
           px={8}
           borderRadius={"3xl"}
           mx={"auto"}
-          onClick={() => router.push("/")}
+          onClick={handlecontinue} //() => router.push("/events")
         >
           Continue
         </Button>
@@ -165,7 +223,7 @@ const Index = () => {
           px={8}
           borderRadius={"3xl"}
           mx={"auto"}
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/addEvent")}
         >
           Publish your event
         </Button>
@@ -175,7 +233,7 @@ const Index = () => {
           mt={7}
           borderRadius={"3xl"}
           mx={"auto"}
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/favEvents")}
         >
           Your Favurite events
         </Button>

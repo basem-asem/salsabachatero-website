@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { Box, Button, Input, Avatar, Text, Icon } from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
+import { Box, Input, Avatar, Icon } from "@chakra-ui/react";
 import { MdPerson } from "react-icons/md";
-const FileUpload = ({ setSelectedFile, selectedFile ,square}) => {
+
+const FileUpload = ({ setSelectedFile, selectedFile, square, videos = false }) => {
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -10,19 +11,19 @@ const FileUpload = ({ setSelectedFile, selectedFile ,square}) => {
   };
 
   return (
-    <Box textAlign="center" display={"flex"} flexDirection={"column"} padding={5}>
+    <Box textAlign="center" display={"flex"} flexDirection={"column"}>
       <Input
         type="file"
-        accept="image/*"
+        accept={videos ? "video/*" : "image/*"}  // Set to accept only videos if videos=true, otherwise images
         onChange={handleFileChange}
         display="none"
-        id="file-input"
+        id={`file-input-${videos ? 'video' : 'image'}`}  // Unique ID for each input
       />
-      <label htmlFor="file-input">
+      <label htmlFor={`file-input-${videos ? 'video' : 'image'}`}>
         <Box
           as="span"
           display="inline-block"
-          borderRadius={square=="true"?"10px": "full"}
+          borderRadius={square === "true" ? "10px" : "full"}
           border="4px solid teal"
           width="120px"
           height="120px"
