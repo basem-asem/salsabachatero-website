@@ -121,7 +121,7 @@ const ImageGallery = ({ fav, events }) => {
                     <img
                       src={img.eventPhoto}
                       alt={`Slide ${i}`}
-                      style={{ height: "550px", borderRadius: "10px" }}
+                      style={{ height: "400px", borderRadius: "10px" }}
                     />
                     {/* Black overlay at the bottom */}
                     <Box
