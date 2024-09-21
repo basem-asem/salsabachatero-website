@@ -12,11 +12,11 @@ import { MapProvider } from "./map-provider";
 
 
 // Define a function component called MapProvider that takes a children prop
-export function AdressMap({setShowplaces}) {
+export function AdressMap({setShowplaces,events}) {
 
   return (<Box id="map-block" maxW={400}>
     <MapProvider>
-      <MapComponent setShowplaces={setShowplaces}/>
+      <MapComponent setShowplaces={setShowplaces} events={events}/>
     </MapProvider>
         </Box>)
   

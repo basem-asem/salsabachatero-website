@@ -13,7 +13,7 @@ const defaultMapCenter = {
   lng: 29.924526,
 };
 
-export const PlacesAutocomplete = ({ setMapLoc, setResult, setShowplaces }) => {
+export const PlacesAutocomplete = ({ setMapLoc, setResult, setShowplaces,events }) => {
   const { value, setValue, suggestions: { status, data }, clearSuggestions } = usePlacesAutocomplete();
   const [showSuggestions, setShowSuggestions] = useState(true); // Track suggestions visibility
 
@@ -76,7 +76,13 @@ export const PlacesAutocomplete = ({ setMapLoc, setResult, setShowplaces }) => {
         bg="gray.100"
         color="black"
         borderColor="transparent"
-        placeholder="Enter your city"
+        placeholder={
+          events === 1
+            ? "Enter event address"
+            : events === 2
+            ? "Enter school address"
+            : "Enter your city"
+        }
         _placeholder={{ color: 'gray.600' }}
       />
       {status === "OK" && showSuggestions && (
@@ -99,7 +105,7 @@ export const PlacesAutocomplete = ({ setMapLoc, setResult, setShowplaces }) => {
   );
 };
 
-const MapComponent = ({ setShowplaces }) => {
+const MapComponent = ({ setShowplaces ,events}) => {
   const [mapLoc, setMapLoc] = useState(defaultMapCenter);
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
@@ -140,7 +146,7 @@ const MapComponent = ({ setShowplaces }) => {
 
   return (
     <div>
-      <PlacesAutocomplete setMapLoc={setMapLoc} setResult={setResult} setShowplaces={setShowplaces} />
+      <PlacesAutocomplete setMapLoc={setMapLoc} setResult={setResult} setShowplaces={setShowplaces} events={events}/>
     </div>
   );
 };

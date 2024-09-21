@@ -39,10 +39,10 @@ const EventForm = () => {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const toast = useToast();
+  const [errors, setErrors] = useState({});
 
   const [showplaces, setShowplaces] = useState(true);
   const time = new Date().toISOString().slice(0, 16); // Set current time to match datetime-local input format
-  var myTimestamp = Timestamp.fromDate(new Date());
 
   const [formData, setFormData] = useState({
     eventName: "",
@@ -93,11 +93,29 @@ const EventForm = () => {
         : [...prevData.type, value],
     }));
   };
-
+  const validateForm = () => {
+    let errors = {};
+    if (!formData.eventName) errors.eventName = "Event name is required";
+    if (!formData.event) errors.event = "Entry price is required";
+    if (!formData.currency) errors.currency = "Currency is required";
+    if (!formData.description)
+      errors.description = "Event description is required";
+    if (!phone) errors.phone = "Phone number is required";
+    if (formData.type.length === 0)
+      errors.type = "Please select at least one event type";
+    if (!formData.date) errors.date = "Event start date is required";
+    if (!formData.closeDate) errors.closeDate = "Event end date is required";
+    if (!selectedFile) errors.photo = "Event picture is required";
+    if (!selectedVid) errors.video = "Event video is required";
+    return errors;
+  };
   const handleSubmit = async () => {
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
     setLoading(true);
-    console.log(selectedFile);
-    console.log(selectedVid);
     setFormData((prevData) => ({ ...prevData, phone: phone }));
 
     // Convert the date fields into Firebase Timestamps
@@ -122,23 +140,29 @@ const EventForm = () => {
       closeDate: endDate, // Convert closeDate to Firebase Timestamp
       host: userRef,
     };
-  let imageDownloadURL='';
-  let videoDownloadURL='';
+    let imageDownloadURL = "";
+    let videoDownloadURL = "";
     try {
-     if (selectedFile) {
-      const imageRef = ref(storage, `users/${userIdString}/eventImages/${selectedFile.name}`);
-      await uploadBytes(imageRef, selectedFile);
-      imageDownloadURL = await getDownloadURL(imageRef);
-      updatedFormData = { ...updatedFormData, eventPhoto: imageDownloadURL };
-    }
+      if (selectedFile) {
+        const imageRef = ref(
+          storage,
+          `users/${userIdString}/eventImages/${selectedFile.name}`
+        );
+        await uploadBytes(imageRef, selectedFile);
+        imageDownloadURL = await getDownloadURL(imageRef);
+        updatedFormData = { ...updatedFormData, eventPhoto: imageDownloadURL };
+      }
 
-    // Check if a video file is selected and upload it
-    if (selectedVid) {
-      const videoRef = ref(storage, `users/${userIdString}/eventVideos/${selectedVid.name}`);
-      await uploadBytes(videoRef, selectedVid);
-      videoDownloadURL = await getDownloadURL(videoRef);
-      updatedFormData = { ...updatedFormData, eventVideo: videoDownloadURL };
-    }
+      // Check if a video file is selected and upload it
+      if (selectedVid) {
+        const videoRef = ref(
+          storage,
+          `users/${userIdString}/eventVideos/${selectedVid.name}`
+        );
+        await uploadBytes(videoRef, selectedVid);
+        videoDownloadURL = await getDownloadURL(videoRef);
+        updatedFormData = { ...updatedFormData, eventVideo: videoDownloadURL };
+      }
       console.log("Updated Form Data:", updatedFormData);
       Create_Update_Doc("events", updatedFormData);
       setLoading(false);
@@ -243,7 +267,7 @@ const EventForm = () => {
               </Grid>
             ) : (
               <>
-                <InputGroup>
+                <InputGroup display="flex" flexDirection={"column"}>
                   <Input
                     name="eventName"
                     placeholder="Event Name"
@@ -255,6 +279,9 @@ const EventForm = () => {
                     padding="16px"
                     fontSize="1rem"
                   />
+                  {errors.eventName && (
+                    <Text color="red.500">{errors.eventName}</Text>
+                  )}
                 </InputGroup>
 
                 <InputGroup display="flex" alignItems={"center"}>
@@ -286,8 +313,12 @@ const EventForm = () => {
                     <option value="EUR">EUR</option>
                   </Select>
                 </InputGroup>
+                {errors.event && <Text color="red.500">{errors.event}</Text>}
+                {errors.currency && (
+                  <Text color="red.500">{errors.currency}</Text>
+                )}
 
-                <InputGroup>
+                <InputGroup display="flex" flexDirection={"column"}>
                   <Textarea
                     name="description"
                     placeholder="Event Description"
@@ -301,6 +332,9 @@ const EventForm = () => {
                     height="100px"
                     resize="none"
                   />
+                  {errors.description && (
+                    <Text color="red.500">{errors.description}</Text>
+                  )}
                 </InputGroup>
 
                 <Box
@@ -309,7 +343,7 @@ const EventForm = () => {
                   alignItems={"center"}
                   gap={2}
                 >
-                  <AdressMap setShowplaces={setShowplaces} />
+                  <AdressMap setShowplaces={setShowplaces} events={1} />
                   <Icon
                     as={IoIosPin}
                     border={"1px solid #4b39ef"}
@@ -335,10 +369,16 @@ const EventForm = () => {
                   value={phone}
                   onChange={(phone) => setPhone(phone)}
                 />
+                {errors.phone && <Text color="red.500">{errors.phone}</Text>}
 
                 <Box border={"1px solid #ccc"} borderRadius={8} p={2}>
                   <Text>Event Type</Text>
-                  <Stack spacing={2} direction="row" padding="8px" wrap={"wrap"}>
+                  <Stack
+                    spacing={2}
+                    direction="row"
+                    padding="8px"
+                    wrap={"wrap"}
+                  >
                     <Checkbox
                       value="Salsa"
                       isChecked={formData.type.includes("Salsa")}
@@ -361,39 +401,44 @@ const EventForm = () => {
                       Kizomba
                     </Checkbox>
                   </Stack>
+                  {errors.type && <Text color="red.500">{errors.type}</Text>}
                 </Box>
-<Box display={"flex"} flexDirection={["column","row"]} gap={5}>
-
-                <InputGroup
-                  display="flex"
-                  alignItems="center"
-                  gap={2}
-                  flexDirection={"column"}
+                <Box display={"flex"} flexDirection={["column", "row"]} gap={5}>
+                  <InputGroup
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
+                    flexDirection={"column"}
                   >
-                  <Text>Upload event image</Text>
-                  <FileUpload
-                    square={"true"}
-                    setSelectedFile={setSelectedFile}
-                    selectedFile={selectedFile}
-                  />
-                </InputGroup>
-
-                <InputGroup
-                  display="flex"
-                  alignItems="center"
-                  gap={2}
-                  flexDirection={"column"}
-                >
-                  <Text>Upload event video</Text>
-                  <FileUpload
-                    square={"true"}
-                    setSelectedFile={setSelectedVid}
-                    selectedFile={selectedVid}
-                    videos
+                    <Text>Upload event image</Text>
+                    <FileUpload
+                      square={"true"}
+                      setSelectedFile={setSelectedFile}
+                      selectedFile={selectedFile}
                     />
-                </InputGroup>
+                    {errors.photo && (
+                      <Text color="red.500">{errors.photo}</Text>
+                    )}
+                  </InputGroup>
 
-                    </Box>
+                  <InputGroup
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
+                    flexDirection={"column"}
+                  >
+                    <Text>Upload event video</Text>
+                    <FileUpload
+                      square={"true"}
+                      setSelectedFile={setSelectedVid}
+                      selectedFile={selectedVid}
+                      videos
+                    />
+                    {errors.video && (
+                      <Text color="red.500">{errors.video}</Text>
+                    )}
+                  </InputGroup>
+                </Box>
                 <InputGroup
                   display="flex"
                   justifyContent="space-evenly"
@@ -418,6 +463,7 @@ const EventForm = () => {
                       borderRadius="8px"
                       fontSize="1rem"
                     />
+                    {errors.date && <Text color="red.500">{errors.date}</Text>}
                   </Box>
 
                   <Box
@@ -438,6 +484,9 @@ const EventForm = () => {
                       borderRadius="8px"
                       fontSize="1rem"
                     />
+                    {errors.closeDate && (
+                      <Text color="red.500">{errors.closeDate}</Text>
+                    )}
                   </Box>
                 </InputGroup>
 

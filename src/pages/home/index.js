@@ -230,6 +230,7 @@ const Index = () => {
         display={"flex"}
         alignItems={"center"}
         flexDirection={"column"}
+        onClick={()=> router.push("/profile")}
       >
         <Avatar size={"md"} src={userData["photo_url"] || manImg}  mt={2} />
         <Text fontSize={"18px"} color="white" fontWeight={400}  textAlign={"center"}>
