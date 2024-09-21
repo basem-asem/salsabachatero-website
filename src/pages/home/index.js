@@ -49,6 +49,7 @@ const Index = () => {
       const parsedUserData = JSON.parse(userDataString);
       setUserData(parsedUserData);
     }
+    setCity(localStorage.getItem("city"));
   }, []);
 
   const handleLocationUpdate = () => {
@@ -292,6 +293,7 @@ const Index = () => {
         >
           Where do you want to dance?
         </Text>
+        
         <Box
           display={"flex"}
           justifyContent={"center"}
@@ -323,6 +325,15 @@ const Index = () => {
             cursor="pointer"
           />
         </Box>
+      {city && <Text
+          color="red"
+          style={{ fontSize: "18px" }}
+          fontWeight={400}
+          ml={"150px"}
+          textAlign={"center"}
+        >
+         Continue with {city}
+        </Text>}
         <Box
           display={"flex"}
           flexWrap={"nowrap"}
