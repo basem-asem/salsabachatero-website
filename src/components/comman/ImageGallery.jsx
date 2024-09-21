@@ -133,7 +133,7 @@ console.log(events);
                     <img
                       src={img.eventPhoto}
                       alt={`Slide ${i}`}
-                      style={{ height: "80vh", borderRadius: "10px" }}
+                      style={{ height: "75vh", borderRadius: "10px" }}
                     />
                     {/* Black overlay at the bottom */}
                     <Box
