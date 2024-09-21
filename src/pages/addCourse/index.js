@@ -31,7 +31,7 @@ import { Create_Update_Doc, imageUploading } from "@/firebase/firebaseutils";
 
 const EventForm = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingPage, setLoadingPage] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedVid, setSelectedVid] = useState(null);
@@ -47,6 +47,7 @@ const EventForm = () => {
   const [formData, setFormData] = useState({
     eventName: "",
     event: "",
+    PaymentTime:"",
     currency: "",
     description: "",
     phone: "",
@@ -120,7 +121,7 @@ const EventForm = () => {
       phone: phone,
       date: startDate, // Convert date to Firebase Timestamp
       closeDate: endDate, // Convert closeDate to Firebase Timestamp
-      host: userRef,
+      host:userRef,
     };
   let imageDownloadURL='';
   let videoDownloadURL='';
@@ -140,7 +141,7 @@ const EventForm = () => {
       updatedFormData = { ...updatedFormData, eventVideo: videoDownloadURL };
     }
       console.log("Updated Form Data:", updatedFormData);
-      Create_Update_Doc("events", updatedFormData);
+      Create_Update_Doc("courses", updatedFormData);
       setLoading(false);
 
       // Submit form logic here
@@ -205,7 +206,7 @@ const EventForm = () => {
         backgroundImage="url('/assets/backgroundImage.png')"
       >
         <Head>
-          <title>Create Event</title>
+          <title>Create Course</title>
         </Head>
         <Box
           width={["auto", "auto", "50%"]}
@@ -246,7 +247,7 @@ const EventForm = () => {
                 <InputGroup>
                   <Input
                     name="eventName"
-                    placeholder="Event Name"
+                    placeholder="School Name"
                     value={formData.eventName}
                     onChange={handleChange}
                     backgroundColor="#FFF"
@@ -260,7 +261,7 @@ const EventForm = () => {
                 <InputGroup display="flex" alignItems={"center"}>
                   <Input
                     name="event"
-                    placeholder="Entry Price"
+                    placeholder="Course Price"
                     value={formData.event}
                     onChange={handleChange}
                     backgroundColor="#FFF"
@@ -270,6 +271,23 @@ const EventForm = () => {
                     fontSize="1rem"
                     type="number"
                   />
+                  <InputGroup display="flex" alignItems={"center"} flexDirection={"column"}>
+                  <Select
+                    name="PaymentTime"
+                    placeholder="Payment time"
+                    value={formData.currency}
+                    onChange={handleChange}
+                    ml="2"
+                    backgroundColor="#FFF"
+                    border="1px solid #CCC"
+                    borderRadius="8px"
+                    padding="8px"
+                    fontSize=".75rem"
+                  >
+                    <option value="hour">Per hour</option>
+                    <option value="day">Per day</option>
+                    <option value="month">Per month</option>
+                  </Select>
                   <Select
                     name="currency"
                     placeholder="Currency"
@@ -280,17 +298,19 @@ const EventForm = () => {
                     border="1px solid #CCC"
                     borderRadius="8px"
                     padding="8px"
-                    fontSize="1rem"
-                  >
+                    fontSize=".75rem"
+                    >
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
                   </Select>
+                    </InputGroup>
                 </InputGroup>
+                
 
                 <InputGroup>
                   <Textarea
                     name="description"
-                    placeholder="Event Description"
+                    placeholder="Course Description"
                     value={formData.description}
                     onChange={handleChange}
                     backgroundColor="#FFF"
@@ -337,7 +357,7 @@ const EventForm = () => {
                 />
 
                 <Box border={"1px solid #ccc"} borderRadius={8} p={2}>
-                  <Text>Event Type</Text>
+                  <Text>Course Type</Text>
                   <Stack spacing={2} direction="row" padding="8px" wrap={"wrap"}>
                     <Checkbox
                       value="Salsa"
@@ -370,7 +390,7 @@ const EventForm = () => {
                   gap={2}
                   flexDirection={"column"}
                   >
-                  <Text>Upload event image</Text>
+                  <Text>Upload course image</Text>
                   <FileUpload
                     square={"true"}
                     setSelectedFile={setSelectedFile}
@@ -384,7 +404,7 @@ const EventForm = () => {
                   gap={2}
                   flexDirection={"column"}
                 >
-                  <Text>Upload event video</Text>
+                  <Text>Upload course video</Text>
                   <FileUpload
                     square={"true"}
                     setSelectedFile={setSelectedVid}
@@ -406,7 +426,7 @@ const EventForm = () => {
                     borderRadius="8px"
                     fontSize="1rem"
                   >
-                    <Text mb={3}>Event Start Date</Text>
+                    <Text mb={3}>Course Start Date</Text>
                     <Input
                       type="datetime-local"
                       name="date"
@@ -426,7 +446,7 @@ const EventForm = () => {
                     borderRadius="8px"
                     fontSize="1rem"
                   >
-                    <Text mb={3}>Event End Date</Text>
+                    <Text mb={3}>Course End Date</Text>
                     <Input
                       type="datetime-local"
                       name="closeDate"
@@ -449,7 +469,7 @@ const EventForm = () => {
                   bgColor={"#f9cf58"}
                   width={"100%"}
                   type="button"
-                  _loading={loading}
+                  isLoading={loading}
                   onClick={handleSubmit}
                 >
                   Submit

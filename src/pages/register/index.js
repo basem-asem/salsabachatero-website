@@ -3,36 +3,30 @@ import { FcGoogle } from "react-icons/fc";
 import {
   Box,
   Button,
-  HStack,
   Heading,
   Text,
   Input,
-  Select,
 } from "@chakra-ui/react";
 import Link from "next/link";
 import useTranslation from "@/hooks/useTranslation";
-import Head from "next/head";
 import Title from "@/components/Title";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "src/firebase/firebase";
 import { CircularProgress, Alert, AlertIcon } from "@chakra-ui/react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { useRouter } from "next/router";
-import { provider } from "@/firebase/firebase";
+import {  auth, db, provider, storage } from "@/firebase/firebase";
 import Image from "next/image";
 import Logo from "@/../../public/assets/Logo.png";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import countries from "libphonenumber-js/metadata.min.json";
-import { FileUploader } from "react-drag-drop-files";
 import FileUpload from "./FileUpload";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { createFirebaseAccountAndDocument } from "src/firebase/firebaseutils";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { signInWithPopup } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const Index = () => {
-  const fileTypes = ["JPEG", "PNG", "GIF"];
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState(false);
@@ -42,7 +36,6 @@ const Index = () => {
   const [errorAlert, setErrorAlert] = useState(false);
   const [inLogin, setInLogin] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const router = useRouter();
   const [selectedCountry, setSelectedCountry] = useState("US");
 
@@ -51,6 +44,7 @@ const Index = () => {
     watch,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = useForm();
 
@@ -69,55 +63,114 @@ const Index = () => {
     setErrorAlert(alert);
   };
 
-  const onSubmit = async (data) => {
-    setInLogin(true);
-    if (!selectedFile) {
-      setAlert("Please select a profile photo", "error", true);
-      setInLogin(false);
-      return;
-    }
-
+  const handleFileUpload = async (file) => {
     try {
-      // Handle optional phone number
-      let phoneNumber = null;
-      if (data.phone) {
-        phoneNumber = parsePhoneNumberFromString(
-          `+${data.countryCode}${data.phone}`,
-          selectedCountry
-        );
-        if (!phoneNumber || !phoneNumber.isValid()) {
-          setAlert("Invalid phone number", "error", true);
-          setInLogin(false);
-          return;
-        }
-      }
-
-      // Upload the file to Firebase Storage
-      const fileName = `${uuidv4()}-${selectedFile.name}`;
+      const fileName = `jvnw7gh-${file.name}`;
       const storageRef = ref(storage, `userFiles/${fileName}`);
-      const uploadTask = uploadBytesResumable(storageRef, selectedFile);
-
-      setUploading(true);
+      const uploadTask = uploadBytesResumable(storageRef, file);
       const snapshot = await uploadTask;
-      const downloadURL = await getDownloadURL(snapshot.ref);
-
-      // After successful upload, create the user account with the URL
-      await createFirebaseAccountAndDocument({
-        ...data,
-        photo_url: downloadURL,
-        phone: phoneNumber ? phoneNumber.number : null, // Include phone number if available
-      });
-
-      setAlert(t("alert.message.login"), "success", true);
-      setTimeout(() => {
-        router.push("/home");
-        setInLogin(false);
-      }, 2000);
-    } catch (err) {
-      setAlert(t("login.invalid"), "error", true);
-      setInLogin(false);
+      const url = await getDownloadURL(snapshot.ref);
+      console.log(url)
+      return url
+    } catch (error) {
+      setAlert("File upload failed", "error", true);
+      throw error;
     }
   };
+
+  const onSubmit = async (data) => {
+    if (selectedFile) {
+   
+      const downloadURL = await handleFileUpload(selectedFile);
+    
+    let phoneNumber = null;
+    
+    setInLogin(true);
+
+    console.log({...data,photo_url: downloadURL,phone: phoneNumber ? phoneNumber.number : null,})
+    if (data.email && data.password ) {
+      createFirebaseAccountAndDocument({
+        ...data,
+        photo_url: downloadURL,
+        phone: phoneNumber ? phoneNumber.number : null,
+      })
+        .then(async (alertMassage) => {
+
+          setAlert(t(alertMassage), "success", true);
+          setTimeout(() => {
+            router.push("/home");
+            setInLogin(false);
+          }, 2000);
+        })
+        .catch((err) => {
+          setAlert(t("login.invalid"), "error", true);
+          setInLogin(false);
+        });
+    } else {
+      setInLogin(false);
+      setAlert(t("login.noInputerror"), "error", true);
+    }
+  };
+  }
+  const handleGoogleSignIn = async () => {
+    try {
+      setInLogin(true);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const userdocRef = doc(db, "users", user.uid);
+      const userdocSnap = await getDoc(userdocRef);
+
+      if (userdocSnap.exists()) {
+        // User exists in Firestore, proceed to login
+        setMessagetype("success");
+        setErrorMessage(t("alert.message.login"));
+        setErrorAlert(true);
+        setTimeout(() => {
+          localStorage.setItem("userId", user.uid);
+          localStorage.setItem("userdata", JSON.stringify(userdocSnap.data()));
+          router.push("/home");
+          setInLogin(false);
+        }, 2000);
+      } else {
+        // If the user doesn't exist, you can create a new user document
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          display_name: user.displayName,
+          photo_url: user.photoURL, // Include the user's photo URL here
+          phone: user.phoneNumber,
+          uid: user.uid,
+          // Add other fields as required
+        });
+
+        setMessagetype("success");
+        setErrorMessage(t("alert.message.login"));
+        setErrorAlert(true);
+        setTimeout(() => {
+          localStorage.setItem("userId", user.uid);
+          localStorage.setItem(
+            "userdata",
+            JSON.stringify({
+              email: user.email,
+              display_name: user.displayName,
+              photo_url: user.photoURL, // Include the user's photo URL here
+              phone: user.phoneNumber,
+              uid: user.uid,
+            })
+          );
+          router.push("/home");
+          setInLogin(false);
+        }, 2000);
+      }
+    } catch (error) {
+      setInLogin(false);
+      setErrorMessage(t("login.invalid"));
+      setErrorAlert(true);
+      console.error("Error signing in with Google:", error);
+    }
+  };
+
+
 
   return (
     <Box
@@ -125,8 +178,8 @@ const Index = () => {
       alignItems="center"
       justifyContent="center"
       flexDirection="column"
-      background="linear-gradient(180deg, rgba(75, 57, 239, 1) 30%, rgba(238, 139, 96, 1) 100%)"
-    >
+      backgroundImage="url('/assets/backgroundImage.png')"
+      >
       <Title name={"Register"} />
       <Box display="flex" justifyContent="center" alignItems="center" gap={3}>
         <Image src={Logo} width={50} height={50} objectFit="cover" />
@@ -163,17 +216,20 @@ const Index = () => {
           Create an account by using the form below.
         </Text>
         <form onSubmit={handleSubmit(onSubmit)}>
+          <Box display={"flex"} justifyContent={"center"}>
           <FileUpload
             setSelectedFile={setSelectedFile}
             selectedFile={selectedFile}
-          />
+            />
+            </Box>
           <Input
             borderRadius={"8px"}
-            name="name"
+            name="display_name"
             bg={"white"}
             py="4"
             marginBottom="10px"
-            {...register("name", { required: t("teacher.error.name") })}
+            marginTop="10px"
+            {...register("display_name", { required: "Your name is required" })}
             placeholder={t("teacher.form.name")}
             _focusVisible={"none"}
             fontSize={"1rem"}
@@ -181,11 +237,11 @@ const Index = () => {
             borderBottom={"1px solid"}
             borderColor={"blackAlpha.400"}
             px="3"
-            aria-invalid={errors.name ? "true" : "false"}
+            aria-invalid={errors.display_name ? "true" : "false"}
           />
-          {errors.name && (
+          {errors.display_name && (
             <p role="alert" style={{ color: "#852830" }}>
-              {errors.name.message}
+              {errors.display_name.message}
             </p>
           )}{" "}
           <Input
@@ -194,6 +250,7 @@ const Index = () => {
             marginBottom="10px"
             bg={"white"}
             py="4"
+            type="number"
             {...register("age", { required: "Your age is required" })}
             placeholder="Your Age..."
             _focusVisible={"none"}
@@ -209,36 +266,18 @@ const Index = () => {
               {errors.name.message}
             </p>
           )}
-          <Controller
-            name="phone"
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <PhoneInput
-                country={"at"}
-                {...field}
-                containerClass="phoneContainer"
-                buttonStyle={
-                  router.locale === "ar"
-                    ? {
-                        paddingRight: "22px",
-                      }
-                    : {
-                        paddingLeft: "8px",
-                      }
-                }
-                inputClass="phoneInput"
-                inputStyle={{ paddingBlock: "22px" }}
-                inputProps={{
-                  name: "phone",
-                  required: false,
-                  autoFocus: false,
-                }}
-                // Registering the input for validation
-                {...register("phone")}
-              />
-            )}
-          />
+          <PhoneInput
+                  inputProps={{ name: "phone" }}
+                  country={"at"}
+                  inputStyle={{
+                    paddingBlock: "22px",
+                    backgroundColor: "#FFF",
+                    border: "1px solid #CCC",
+                    borderRadius: "8px",
+                  }}
+                  value={phone}
+                  onChange={(phone) => setPhone(phone)}
+                />
           {/* Error message for phone field */}
           {errors.phone && (
             <span style={{ color: "#852830" }}>{errors.phone.message}</span>
@@ -446,6 +485,7 @@ const Index = () => {
           alignItems="center"
           justifyContent="center"
           marginBottom="10px"
+          onClick={handleGoogleSignIn}
         >
           <FcGoogle style={{ fontSize: "2rem", marginRight: "8px" }} />
           Continue with google

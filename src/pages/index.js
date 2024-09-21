@@ -1,18 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Box, Button, HStack, Heading, Text, Input } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  HStack,
+  Heading,
+  Text,
+  Input,
+  CircularProgress,
+  Alert,
+  AlertIcon,
+} from "@chakra-ui/react";
 import Link from "next/link";
 import useTranslation from "@/hooks/useTranslation";
 import Head from "next/head";
 import Title from "@/components/Title";
 import { useForm } from "react-hook-form";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "src/firebase/firebase";
-import { CircularProgress, Alert, AlertIcon } from "@chakra-ui/react";
+import { doc, getDoc, setDoc } from "firebase/firestore"; // Ensure you import setDoc in case you need to create new users
+import { auth, db, provider } from "src/firebase/firebase"; // Ensure provider is initialized in firebase.js
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { useRouter } from "next/router";
-import { provider } from "@/firebase/firebase";
 import Image from "next/image";
 import Logo from "@/../../public/assets/Logo.png";
 
@@ -22,10 +30,11 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState("");
   const [messagetype, setMessagetype] = useState("error");
   const [errorAlert, setErrorAlert] = useState(false);
-  const [password, setPassword] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false); // Rename this for clarity
   const router = useRouter();
   const { register, handleSubmit } = useForm();
 
+  // Handle email/password login
   const onSubmit = (data) => {
     if (data.email && data.passwordVal) {
       setInLogin(true);
@@ -34,18 +43,18 @@ export default function Home() {
           const userdocRef = doc(db, "users", userresult.user.uid);
           const userdocSnap = await getDoc(userdocRef);
           if (userdocSnap.exists()) {
-              setMessagetype("success");
-              setErrorMessage(t("alert.message.login"));
-              setErrorAlert(true);
-              setTimeout(() => {
-                localStorage.setItem("userId", userdocSnap.id);
-                localStorage.setItem(
-                  "userdata",
-                  JSON.stringify(userdocSnap.data())
-                );
-                router.push("/home");
-                setInLogin(false);
-              }, 2000);
+            setMessagetype("success");
+            setErrorMessage(t("alert.message.login"));
+            setErrorAlert(true);
+            setTimeout(() => {
+              localStorage.setItem("userId", userdocSnap.id);
+              localStorage.setItem(
+                "userdata",
+                JSON.stringify(userdocSnap.data())
+              );
+              router.push("/home");
+              setInLogin(false);
+            }, 2000);
           } else {
             setInLogin(false);
             setErrorMessage(t("login.invalid"));
@@ -64,17 +73,10 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    if (errorAlert) {
-      const timer = setTimeout(() => {
-        setErrorAlert(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [errorAlert]);
-
+  // Handle Google login
   const handleGoogleSignIn = async () => {
     try {
+      setInLogin(true);
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
@@ -82,29 +84,45 @@ export default function Home() {
       const userdocSnap = await getDoc(userdocRef);
 
       if (userdocSnap.exists()) {
-        const { Role } = userdocSnap.data();
-        if (Role === "User") {
-          setMessagetype("success");
-          setErrorMessage(t("alert.message.login"));
-          setErrorAlert(true);
-          setTimeout(() => {
-            localStorage.setItem("userId", userdocSnap.id);
-            localStorage.setItem(
-              "userdata",
-              JSON.stringify(userdocSnap.data())
-            );
-            router.push("/home");
-            setInLogin(false);
-          }, 2000);
-        } else {
-          setInLogin(false);
-          setErrorMessage(t("login.invalid"));
-          setErrorAlert(true);
-        }
-      } else {
-        setInLogin(false);
-        setErrorMessage(t("login.invalid"));
+        // User exists in Firestore, proceed to login
+        setMessagetype("success");
+        setErrorMessage(t("alert.message.login"));
         setErrorAlert(true);
+        setTimeout(() => {
+          localStorage.setItem("userId", user.uid);
+          localStorage.setItem("userdata", JSON.stringify(userdocSnap.data()));
+          router.push("/home");
+          setInLogin(false);
+        }, 2000);
+      } else {
+        // If the user doesn't exist, you can create a new user document
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          display_name: user.displayName,
+          photo_url: user.photoURL, // Include the user's photo URL here
+          phone: user.phoneNumber,
+          uid: user.uid,
+          // Add other fields as required
+        });
+
+        setMessagetype("success");
+        setErrorMessage(t("alert.message.login"));
+        setErrorAlert(true);
+        setTimeout(() => {
+          localStorage.setItem("userId", user.uid);
+          localStorage.setItem(
+            "userdata",
+            JSON.stringify({
+              email: user.email,
+              display_name: user.displayName,
+              photo_url: user.photoURL, // Include the user's photo URL here
+              phone: user.phoneNumber,
+              uid: user.uid,
+            })
+          );
+          router.push("/home");
+          setInLogin(false);
+        }, 2000);
       }
     } catch (error) {
       setInLogin(false);
@@ -114,14 +132,24 @@ export default function Home() {
     }
   };
 
+  // Handle the alert timeout
+  useEffect(() => {
+    if (errorAlert) {
+      const timer = setTimeout(() => {
+        setErrorAlert(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorAlert]);
+
   return (
     <Box
       display="flex"
       alignItems="center"
       justifyContent="center"
       flexDirection="column"
-      overflow={"auto"}
-      height={"100vh"}
+      overflow="auto"
+      height="100vh"
       backgroundImage="url('/assets/backgroundImage.png')"
     >
       <Title name={"Login"} />
@@ -129,7 +157,7 @@ export default function Home() {
         <title>Login</title>
       </Head>
       <Box display="flex" justifyContent="center" alignItems="center" gap={3}>
-        <Image src={Logo} width={50} height={50} objectFit="cover" />
+        <Image src={Logo} width={50} height={50} objectFit="cover" alt="Logo" />
         <Text color="white" fontSize={24} fontWeight={600}>
           Salsabachatero
         </Text>
@@ -137,9 +165,6 @@ export default function Home() {
       <Box
         width="auto"
         padding="20px"
-        marginBottom="2.5"
-        marginRight="2.5"
-        marginLeft="2.5"
         backgroundColor="white"
         borderRadius="12px"
         boxShadow="0px 4px 12px rgba(0, 0, 0, 0.1)"
@@ -153,9 +178,15 @@ export default function Home() {
         >
           Welcome Back{" "}
         </Heading>
-          <Text marginBottom="10px" color="#555" width={["auto","70%"]} textAlign="center" marginX={"auto"}>
+        <Text
+          marginBottom="10px"
+          color="#555"
+          width={["auto", "70%"]}
+          textAlign="center"
+          marginX="auto"
+        >
           Fill out the information below in order to access your account.
-          </Text>
+        </Text>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Input
             paddingY="12px"
@@ -173,7 +204,7 @@ export default function Home() {
             <Input
               paddingY="12px"
               placeholder={t("login.password")}
-              type={password ? "text" : "password"}
+              type={passwordVisible ? "text" : "password"}
               border="1px solid #ccc"
               borderRadius="8px"
               _focusVisible={{ outline: "none", borderColor: "#4b39ef" }}
@@ -185,9 +216,9 @@ export default function Home() {
                 },
               })}
             />
-            {password ? (
+            {passwordVisible ? (
               <AiFillEye
-                onClick={() => setPassword(false)}
+                onClick={() => setPasswordVisible(false)}
                 style={{
                   position: "absolute",
                   top: "50%",
@@ -200,7 +231,7 @@ export default function Home() {
               />
             ) : (
               <AiFillEyeInvisible
-                onClick={() => setPassword(true)}
+                onClick={() => setPasswordVisible(true)}
                 style={{
                   position: "absolute",
                   top: "50%",
@@ -213,7 +244,7 @@ export default function Home() {
               />
             )}
           </Box>
-          
+
           <Button
             width="100%"
             backgroundColor="#4b39ef"
@@ -243,14 +274,19 @@ export default function Home() {
           justifyContent="center"
           marginBottom="10px"
         >
-          <FcGoogle style={{ fontSize: "2rem", marginRight: "8px" }} />
-          Continue with google
+          <FcGoogle style={{ fontSize: "1.5rem", marginRight: "8px" }} />
+          Sign In with Google
         </Button>
-        <Text textAlign="center" marginBottom="10px" color="#555" style={{fontSize: "14px !important"}}>
+        <Text
+          textAlign="center"
+          marginBottom="10px"
+          color="#555"
+          style={{ fontSize: "14px !important" }}
+        >
           {t("don't")}
           <Link
             href={"/register"}
-            style={{ color: "#4b39ef", marginLeft: "4px" , fontSize: "16px"}}
+            style={{ color: "#4b39ef", marginLeft: "4px", fontSize: "16px" }}
           >
             Create Account
           </Link>
@@ -259,29 +295,27 @@ export default function Home() {
           width="100%"
           backgroundColor="#eee"
           paddingY="12px"
-          onClick={()=> router.push("/forgot")}
+          onClick={() => router.push("/forgot")}
           display="flex"
           alignItems="center"
           justifyContent="center"
         >
           Forgot Password?
         </Button>
-       
+
+        {errorAlert && (
+          <Alert status={messagetype} marginBottom="10px">
+            <AlertIcon />
+            {errorMessage}
+          </Alert>
+        )}
+        <HStack justifyContent="center" fontSize="sm" spacing="1">
+          <Text>{t("login.signupmessage")} </Text>
+          <Link href="/signup">
+            <Text color="#4b39ef">{t("signup.register")}</Text>
+          </Link>
+        </HStack>
       </Box>
-      {errorAlert && (
-        <Alert
-          status={messagetype}
-          position="fixed"
-          top="20px"
-          right="20px"
-          width="300px"
-          borderRadius="8px"
-          zIndex="1000"
-        >
-          <AlertIcon />
-          <Text>{errorMessage}</Text>
-        </Alert>
-      )}
     </Box>
   );
 }

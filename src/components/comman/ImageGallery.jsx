@@ -19,11 +19,11 @@ import { db } from "@/firebase/firebase";
 import { IoIosPin } from "react-icons/io";
 import Link from "next/link";
 
-const ImageGallery = ({ fav, events }) => {
+const ImageGallery = ({ fav, events, course }) => {
   const { t } = useTranslation();
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
+console.log(events);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,7 +48,19 @@ const ImageGallery = ({ fav, events }) => {
 
             setImages(favoriteEvents.filter((event) => event !== null));
           }
-        } else {
+        } else if(course == true) {
+          // Fetch non-favorite events by ids
+          const eventsResult = await Promise.all(
+            events.map(async (id) => {
+              const eventRef = doc(db, "courses", id);
+              const eventDoc = await getDoc(eventRef);
+              return eventDoc.exists() ? { docid: id, ...eventDoc.data() } : null;
+            })
+          );
+
+          setImages(eventsResult.filter((event) => event !== null));
+        }else{
+          
           // Fetch non-favorite events by ids
           const eventsResult = await Promise.all(
             events.map(async (id) => {
@@ -68,7 +80,7 @@ const ImageGallery = ({ fav, events }) => {
     };
 
     fetchData();
-  }, [fav, events]);
+  }, [fav, events,course]);
 
   return (
     <Box width={"full"}>
@@ -121,7 +133,7 @@ const ImageGallery = ({ fav, events }) => {
                     <img
                       src={img.eventPhoto}
                       alt={`Slide ${i}`}
-                      style={{ height: "400px", borderRadius: "10px" }}
+                      style={{ height: "80vh", borderRadius: "10px" }}
                     />
                     {/* Black overlay at the bottom */}
                     <Box
@@ -151,10 +163,18 @@ const ImageGallery = ({ fav, events }) => {
                           </React.Fragment>
                         ))}
                       </Box>
-                      <Text fontSize="sm">
-                        Price Entry: {img.event}{" "}
-                        {img.currency === "Euro" ? "€" : "$"}
-                      </Text>
+                     {course?(
+                       <Text fontSize="sm">
+                       Price Per {img.PaymentTime}: {img.event}{" "}
+                       {img.currency === "Euro" ? "€" : "$"}
+                       </Text>
+                     ):(
+                       <Text fontSize="sm">
+                       Price Entry: {img.event}{" "}
+                       {img.currency === "Euro" ? "€" : "$"}
+                       </Text>
+                      )
+                    }
                       <Text fontSize="sm">
                         {new Date(img.date.seconds * 1000).toLocaleString(
                           "en-US",

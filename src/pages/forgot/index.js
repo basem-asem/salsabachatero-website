@@ -4,7 +4,12 @@ import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import Title from '@/components/Title';
 import Banner from '@/components/comman/banner';
 import useTranslation from '@/hooks/useTranslation';
-import { Box, Button, HStack, Input, Text } from '@chakra-ui/react';
+import { Box, Button, Heading, HStack, Icon, Input, Text } from '@chakra-ui/react';
+import Head from 'next/head';
+import Logo from "@/../../public/assets/Logo.png";
+import Image from 'next/image';
+import { BsArrowLeftCircleFill } from 'react-icons/bs';
+import { IoIosArrowRoundBack, IoMdArrowBack } from 'react-icons/io';
 
 const ForgotPassword = () => {
   const { t } = useTranslation();
@@ -14,7 +19,10 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const auth = getAuth();
-
+  const [errorMessage, setErrorMessage] = useState("");
+  const [messagetype, setMessagetype] = useState("error");
+  const [errorAlert, setErrorAlert] = useState(false);
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -25,7 +33,7 @@ const ForgotPassword = () => {
       await sendPasswordResetEmail(auth, email);
       setMessage(t('password.reset.link.sent'));
       setEmail('');
-      router.push('/login');
+      router.push('/');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -34,10 +42,64 @@ const ForgotPassword = () => {
   };
 
   return (
-    <>
-      <Title name={'Forgot Password'} />
-      <Banner title={t('forgot.account')}>
-        <form onSubmit={handleSubmit}>
+    <Box
+    display="flex"
+    alignItems="center"
+    justifyContent="center"
+    flexDirection="column"
+    overflow="auto"
+    height="100vh"
+    backgroundImage="url('/assets/backgroundImage.png')"
+  >
+    <Title name={"Forgot Password"} />
+    <Head>
+      <title>Forgot Password</title>
+    </Head>
+    <Box display="flex" justifyContent="center" alignItems="center" gap={3}>
+      <Image src={Logo} width={50} height={50} objectFit="cover" alt="Logo" />
+      <Text color="white" fontSize={24} fontWeight={600}>
+        Salsabachatero
+      </Text>
+    </Box>
+    <Box
+    pos={'relative'}
+      width="auto"
+      padding="20px"
+      backgroundColor="white"
+      borderRadius="12px"
+      boxShadow="0px 4px 12px rgba(0, 0, 0, 0.1)"
+    >
+      <Heading
+        textAlign="center"
+        marginBottom="10px"
+        fontSize="2xl"
+        fontWeight="bold"
+        color="#333"
+      >
+        Forgot Password
+      </Heading>
+      <Text
+        marginBottom="10px"
+        color="#555"
+        width={["auto", "70%"]}
+        textAlign="center"
+        marginX="auto"
+      >
+        Please fill out your email below in order to recive a reset password link.
+      </Text>
+      <Icon
+        pos={"absolute"}
+        m={2}
+        top={0}
+        left={0}
+        as={IoIosArrowRoundBack}
+        w={8}
+        h={8}
+        color="#aaa"
+        cursor={"pointer"}
+        onClick={() => router.push("/")}
+      />
+      <form onSubmit={handleSubmit}>
           <Box
             mx={"auto"}
             bg={"white"}
@@ -77,22 +139,30 @@ const ForgotPassword = () => {
           <HStack width={"full"} mt='10' mx="auto">
             <Button
               my="5"
-              bg="#822727"
+              backgroundColor="#4b39ef"
               width={"container.sm"}
               py="5"
-              _hover={{ bg: "hsla(44, 100%, 50%, 0.2)" }}
+              _hover={{ backgroundColor: "#6c61cd" }}
               color={"white"}
               mx="auto"
               type="submit"
               isLoading={loading}
             >
-              {t("continue")}
+              Send reset Link
             </Button>
           </HStack>
         </form>
-      </Banner>
-    </>
-  );
+      
+      {errorAlert && (
+        <Alert status={messagetype} marginBottom="10px">
+          <AlertIcon />
+          {errorMessage}
+        </Alert>
+      )}
+      
+    </Box>
+  </Box>
+);
 }
 
 export default ForgotPassword;

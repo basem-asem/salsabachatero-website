@@ -8,8 +8,17 @@ import { AdressMap } from "@/components/Address/map";
 import { IoIosPin } from "react-icons/io";
 import { useRouter } from "next/router";
 import { getDistance } from "geolib";
-import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "@/firebase/firebase";
+import { reload } from "firebase/auth";
+import { FaHeart, FaRegHeart } from "react-icons/fa6";
 
 const Index = () => {
   const { t } = useTranslation();
@@ -19,8 +28,20 @@ const Index = () => {
   const dispatch = useDispatch();
   const toast = useToast();
   const router = useRouter();
+  const [selectedTypes, setSelectedTypes] = useState([]); // Manage selected dance types
+  const danceTypes = ["Salsa", "Bachata", "Kizomba"];
+
+  // Toggle the selection of a dance type
+  const handleSelectType = (type) => {
+    if (selectedTypes.includes(type)) {
+      setSelectedTypes(selectedTypes.filter((item) => item !== type)); // Remove type if already selected
+    } else {
+      setSelectedTypes([...selectedTypes, type]); // Add type if not selected
+    }
+    console.log(selectedTypes);
+  };
   let manImg =
-    "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWFufGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60";
+  "https://media.istockphoto.com/id/1354776457/vector/default-image-icon-vector-missing-picture-page-for-website-design-or-mobile-app-no-photo.jpg?s=612x612&w=0&k=20&c=w3OW0wX3LyiFRuDHo9A32Q0IUMtD4yjXEvQlqyYk9O4=";
 
   useEffect(() => {
     const userDataString = localStorage.getItem("userdata");
@@ -63,45 +84,48 @@ const Index = () => {
     });
   };
 
-
   async function getEvents(lat, long) {
     try {
       const currentTime = new Date();
-  
+
       // Query events that have a future date
       const eventsQuery = query(
         collection(db, "events"),
-        where("date", ">=", currentTime)
+        where("date", ">=", currentTime),
+        where("type", "array-contains-any", selectedTypes.length > 0 ? selectedTypes : danceTypes)
       );
-      
+
       const eventsSnapshot = await getDocs(eventsQuery);
       const eventsInRange = [];
-  
+
       // Loop through events and calculate the distance
       eventsSnapshot.forEach((doc) => {
         const eventData = doc.data();
-        
+
         if (eventData.latlng) {
           const eventLocation = {
             latitude: eventData.latlng.latitude,
             longitude: eventData.latlng.longitude,
           };
-  
+
           // Calculate the distance between the event and the user's location
           const distance = getDistance(
             { latitude: lat, longitude: long },
-            { latitude: eventLocation.latitude, longitude: eventLocation.longitude }
+            {
+              latitude: eventLocation.latitude,
+              longitude: eventLocation.longitude,
+            }
           );
-  
+
           const km = distance / 1000; // Convert distance to kilometers
-  
+
           // If the event is within 20 kilometers, add its ID to the array
           if (km <= 20) {
             eventsInRange.push(doc.id);
           }
         }
       });
-  
+
       // Return the array of event IDs
       return eventsInRange;
     } catch (error) {
@@ -109,15 +133,76 @@ const Index = () => {
       return [];
     }
   }
-    const handlecontinue = () => {
+  async function getCourses(lat, long) {
+    try {
+      const currentTime = new Date();
+
+      // Query events that have a future date
+      const eventsQuery = query(
+        collection(db, "courses"),
+        where("date", ">=", currentTime),
+        // where("type", "array-contains-any", selectedTypes)
+      );
+
+      const eventsSnapshot = await getDocs(eventsQuery);
+      const eventsInRange = [];
+
+      // Loop through events and calculate the distance
+      eventsSnapshot.forEach((doc) => {
+        const eventData = doc.data();
+
+        if (eventData.latlng) {
+          const eventLocation = {
+            latitude: eventData.latlng.latitude,
+            longitude: eventData.latlng.longitude,
+          };
+
+          // Calculate the distance between the event and the user's location
+          const distance = getDistance(
+            { latitude: lat, longitude: long },
+            {
+              latitude: eventLocation.latitude,
+              longitude: eventLocation.longitude,
+            }
+          );
+
+          const km = distance / 1000; // Convert distance to kilometers
+
+          // If the event is within 20 kilometers, add its ID to the array
+          if (km <= 20) {
+            eventsInRange.push(doc.id);
+          }
+        }
+      });
+
+      // Return the array of event IDs
+      return eventsInRange;
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      return [];
+    }
+  }
+  const handlecontinue = () => {
     const lat = localStorage.getItem("latitude");
     const long = localStorage.getItem("longitude");
     getEvents(lat, long).then((events) => {
-      const eventIdsString = events.join(',');
+      const eventIdsString = events.join(",");
 
       router.push({
-        pathname: '/events', // the target page
+        pathname: "/events", // the target page
         query: { eventIds: eventIdsString },
+      });
+    });
+  };
+  const handleSearchCourses = () => {
+    const lat = localStorage.getItem("latitude");
+    const long = localStorage.getItem("longitude");
+    getCourses(lat, long).then((courses) => {
+      const courseIdsString = courses.join(",");
+
+      router.push({
+        pathname: "/courses", // the target page
+        query: { courseIds: courseIdsString },
       });
     });
   };
@@ -136,25 +221,29 @@ const Index = () => {
       <Title name={"Home"} />
       <Box
         borderTopRadius={"10px"}
-        w="full"
+        w="auto"
         h={"150px"}
         pos={"absolute"}
         top={0}
         left={0}
+        ml={2}
+        display={"flex"}
+        alignItems={"center"}
+        flexDirection={"column"}
       >
-        <Avatar size={"md"} src={userData["photo_url"] || manImg} ml={5} />
-        <Text fontSize={"18px"} color="white" fontWeight={400} pl={5}>
+        <Avatar size={"md"} src={userData["photo_url"] || manImg}  mt={2} />
+        <Text fontSize={"18px"} color="white" fontWeight={400}  textAlign={"center"}>
           {userData["display_name"]}
         </Text>
       </Box>
-      <Text
+      {/* <Text
         color="#f9cf58"
-        fontSize={30}
+        style={{ fontSize: "28px" }}
         fontWeight={600}
         textAlign={"center"}
       >
         Salsabachatero
-      </Text>
+      </Text> */}
       {/* the center of the page */}
       <Box
         display={"flex"}
@@ -163,7 +252,43 @@ const Index = () => {
         gap={3}
         flexDirection={"column"}
       >
-        <Text color="white" fontSize={30} fontWeight={600} textAlign={"center"}>
+        <Text
+          color="white"
+          style={{ fontSize: "20px" }}
+          fontWeight={600}
+          textAlign={"center"}
+        >
+          Choose your favourite type
+        </Text>
+        <Box display="flex" gap={3}>
+          {danceTypes.map((type) => (
+            <Box
+              key={type}
+              onClick={() => handleSelectType(type)}
+              cursor="pointer"
+              borderRadius="50%"
+              p={4}
+              bg={selectedTypes.includes(type) ? "lightgreen" : "#add8e6"}
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              width="70px"
+              height="70px"
+              color="black"
+              fontWeight={600}
+              style={{ fontSize: "14px" }}
+              transition="background-color 0.3s ease"
+            >
+              {type}
+            </Box>
+          ))}
+        </Box>
+        <Text
+          color="white"
+          style={{ fontSize: "20px" }}
+          fontWeight={600}
+          textAlign={"center"}
+        >
           Where do you want to dance?
         </Text>
         <Box
@@ -171,8 +296,9 @@ const Index = () => {
           justifyContent={"center"}
           alignItems={"center"}
           gap={2}
+          pos={"relative"}
         >
-          {showplaces && (
+          {/* {showplaces && (
             <Button
               onClick={() => setShowplaces(!showplaces)}
               borderRadius={"3xl"}
@@ -181,14 +307,14 @@ const Index = () => {
             >
               Enter your city
             </Button>
-          )}
-          {!showplaces && <AdressMap setShowplaces={setShowplaces}/>}
-          
+          )} */}
+          <AdressMap setShowplaces={setShowplaces} />
+
           <Icon
             as={IoIosPin}
             border={"1px solid #4b39ef"}
             borderRadius={"50%"}
-            bgColor={"white"}
+            bgColor={"#c4ecff"}
             w={8}
             h={8}
             color="black"
@@ -196,15 +322,38 @@ const Index = () => {
             cursor="pointer"
           />
         </Box>
-        <Button
-          maxW={"fit-content"}
-          px={8}
-          borderRadius={"3xl"}
-          mx={"auto"}
-          onClick={handlecontinue} //() => router.push("/events")
+        <Box
+          display={"flex"}
+          flexWrap={"nowrap"}
+          justifyContent={"center"}
+          alignItems={"center"}
         >
-          Continue
-        </Button>
+          <Button
+            h={"auto"}
+            px={4}
+            py={4}
+            borderRadius={"3xl"}
+            mx={"auto"}
+            mr={4}
+            bgColor={"#c4ecff"}
+            whiteSpace={"break-spaces"}
+            onClick={handleSearchCourses} //() => router.push("/events")
+          >
+            Find dance courses
+          </Button>
+          <Button
+            h={"auto"}
+            maxW={"fit-content"}
+            px={8}
+            py={4}
+            borderRadius={"3xl"}
+            mx={"auto"}
+            bgColor={"#c4ecff"}
+            onClick={handlecontinue} //() => router.push("/events")
+          >
+            Continue
+          </Button>
+        </Box>
       </Box>
       <Box
         display={"flex"}
@@ -213,29 +362,39 @@ const Index = () => {
         flexDirection={"column"}
         gap={3}
         pt={15}
-        mt={20}
+        mt={"10"}
       >
-        <Text color="white" fontSize={20} fontWeight={500} textAlign={"center"}>
-          You can publish your event here
-        </Text>
         <Button
           maxW={"fit-content"}
           px={8}
           borderRadius={"3xl"}
           mx={"auto"}
+          bgColor={"#c4ecff"}
           onClick={() => router.push("/addEvent")}
         >
-          Publish your event
+          Publish your Event here
         </Button>
         <Button
           maxW={"fit-content"}
           px={8}
-          mt={7}
           borderRadius={"3xl"}
           mx={"auto"}
-          onClick={() => router.push("/favEvents")}
+          bgColor={"#c4ecff"}
+          onClick={() => router.push("/addCourse")}
         >
-          Your Favurite events
+          Publish your Courses here
+        </Button>
+        <Button
+          maxW={"fit-content"}
+          px={8}
+          borderRadius={"3xl"}
+          mx={"auto"}
+          bgColor={"#c4ecff"}
+          onClick={() => router.push("/favEvents")}
+          gap={2}
+        >
+          <Icon as={FaRegHeart} w={6} h={6} color="red.400" /> Your favourite
+          Events
         </Button>
       </Box>
     </Box>

@@ -14,8 +14,11 @@ export default function App({ Component, pageProps }) {
 
   useEffect(() => {
    
-    if (!localStorage.getItem("language")) {
+    if (!localStorage.getItem("userId")) {
       router.push("/");
+    }else{
+      router.push("/home");
+ 
     }
   }, []);
 

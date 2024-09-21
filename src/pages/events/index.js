@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import ImageGallery from "@/components/comman/ImageGallery";
 import { IoArrowRedoSharp } from "react-icons/io5";
 import { IoArrowUndoSharp } from "react-icons/io5";
+import { BsArrowLeftCircleFill } from "react-icons/bs";
 
 const Index = () => {
   const { t } = useTranslation();
@@ -81,9 +82,18 @@ console.log(eventIdsArray);
       mx={5}
     >
       <Title name={"Home"} />
-
-      <Text color="#f9cf58" fontSize={30} fontWeight={600} textAlign={"center"}>
-        Salsabachatero
+      <Icon
+        pos={"absolute"}
+        m={2}
+        as={BsArrowLeftCircleFill}
+        w={12}
+        h={12}
+        color="#a16aa1"
+        cursor={"pointer"}
+        onClick={() => router.push("/home")}
+      />
+      <Text color="#b42d29" style={{fontSize:"24px"}} fontWeight={600} textAlign={"center"}>
+      Dance Events
       </Text>
       <Box display="flex" flexDirection="row" justifyContent={"center"} gap={5}>
         <Icon as={IoArrowUndoSharp} w={8} h={8} color="black" />

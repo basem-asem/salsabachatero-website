@@ -161,14 +161,16 @@ export function createFirebaseAccountAndDocument(userData) {
         ...userData,
         uid: user.uid,
         created_time: timestamp,
-        Role: "User"
       };
       const docRef = doc(usersCollectionRef, user.uid);
       console.log(userDoc);
 
       await setDoc(docRef, userDoc);
       localStorage.setItem("userId",  user.uid);
-
+      localStorage.setItem(
+        "userdata",
+        JSON.stringify(userDoc.data())
+      );
       resolve("alert.message.login");
       console.log("Document written with ID: ", docRef.id);
     } catch (error) {
