@@ -329,7 +329,6 @@ const Index = () => {
           color="red"
           style={{ fontSize: "18px" }}
           fontWeight={400}
-          ml={"150px"}
           textAlign={"center"}
         >
          Continue with {city}
