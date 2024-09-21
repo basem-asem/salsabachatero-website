@@ -115,8 +115,7 @@ console.log(events);
                 1024: { spaceBetween: 40, slidesPerView: 4 },
               }}
               pagination={false}
-              autoplay={{ delay: 3000, disableOnInteraction: false }}
-              modules={[EffectCoverflow, Pagination, Autoplay]}
+              modules={[EffectCoverflow, Pagination]}
               className="mySwiper"
             >
               {images.map((img, i) => (
@@ -140,7 +139,7 @@ console.log(events);
                       position="absolute"
                       bottom="0"
                       width="100%"
-                      bgGradient="linear(to-t, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0))"
+                      bgGradient="linear(to-t, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.3))"
                       p={3}
                       color="white"
                       borderRadius={10}
