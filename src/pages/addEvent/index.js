@@ -45,7 +45,7 @@ const EventForm = () => {
   const time = new Date().toISOString().slice(0, 16); // Set current time to match datetime-local input format
 
   const [formData, setFormData] = useState({
-    eventName: "",
+    title: "",
     event: "",
     currency: "",
     description: "",
@@ -95,7 +95,7 @@ const EventForm = () => {
   };
   const validateForm = () => {
     let errors = {};
-    if (!formData.eventName) errors.eventName = "Event name is required";
+    if (!formData.title) errors.title = "Event name is required";
     if (!formData.event) errors.event = "Entry price is required";
     if (!formData.currency) errors.currency = "Currency is required";
     if (!formData.description)
@@ -269,9 +269,9 @@ const EventForm = () => {
               <>
                 <InputGroup display="flex" flexDirection={"column"}>
                   <Input
-                    name="eventName"
+                    name="title"
                     placeholder="Event Name"
-                    value={formData.eventName}
+                    value={formData.title}
                     onChange={handleChange}
                     backgroundColor="#FFF"
                     border="1px solid #CCC"
@@ -279,8 +279,8 @@ const EventForm = () => {
                     padding="16px"
                     fontSize="1rem"
                   />
-                  {errors.eventName && (
-                    <Text color="red.500">{errors.eventName}</Text>
+                  {errors.title && (
+                    <Text color="red.500">{errors.title}</Text>
                   )}
                 </InputGroup>
 
@@ -309,8 +309,8 @@ const EventForm = () => {
                     padding="8px"
                     fontSize="1rem"
                   >
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
+                    <option value="Dollar">USD</option>
+                    <option value="Euro">EUR</option>
                   </Select>
                 </InputGroup>
                 {errors.event && <Text color="red.500">{errors.event}</Text>}

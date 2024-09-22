@@ -128,7 +128,7 @@ console.log(events);
                     borderRadius: "8px",
                   }}
                 >
-                  <Link href={`/eventDetalis/${img.docid}`}>
+                  <Link href={course?`/courseDetalis/${img.docid}`:`/eventDetalis/${img.docid}`}>
                     <img
                       src={img.eventPhoto}
                       alt={`Slide ${i}`}

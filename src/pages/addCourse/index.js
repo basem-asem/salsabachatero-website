@@ -46,7 +46,7 @@ const EventForm = () => {
   var myTimestamp = Timestamp.fromDate(new Date());
 
   const [formData, setFormData] = useState({
-    eventName: "",
+    title: "",
     event: "",
     PaymentTime: "",
     currency: "",
@@ -97,7 +97,7 @@ const EventForm = () => {
   };
   const validateForm = () => {
     let errors = {};
-    if (!formData.eventName) errors.eventName = "school name is required";
+    if (!formData.title) errors.title = "school name is required";
     if (!formData.event) errors.event = "Entry price is required";
     if (!formData.currency) errors.currency = "Currency is required";
     if (!formData.PaymentTime) errors.PaymentTime = "PaymentTime is required";
@@ -274,9 +274,9 @@ const EventForm = () => {
               <>
                 <InputGroup display="flex" flexDirection={"column"}>
                   <Input
-                    name="eventName"
+                    name="title"
                     placeholder="School Name"
-                    value={formData.eventName}
+                    value={formData.title}
                     onChange={handleChange}
                     backgroundColor="#FFF"
                     border="1px solid #CCC"
@@ -284,8 +284,8 @@ const EventForm = () => {
                     padding="16px"
                     fontSize="1rem"
                   />
-                  {errors.eventName && (
-                    <Text color="red.500">{errors.eventName}</Text>
+                  {errors.title && (
+                    <Text color="red.500">{errors.title}</Text>
                   )}
                 </InputGroup>
 
@@ -335,8 +335,8 @@ const EventForm = () => {
                       padding="8px"
                       fontSize=".75rem"
                     >
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
+                      <option value="Dollar">USD</option>
+                      <option value="Euro">EUR</option>
                     </Select>
                   </InputGroup>
                 </InputGroup>

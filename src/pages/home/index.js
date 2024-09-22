@@ -19,7 +19,8 @@ import {
 import { db } from "@/firebase/firebase";
 import { reload } from "firebase/auth";
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
-
+import emptyUser from "@/../../public/assets/emptyUser.jpg";
+import Image from "next/image";
 const Index = () => {
   const { t } = useTranslation();
   const [city, setCity] = useState("");
@@ -30,7 +31,6 @@ const Index = () => {
   const router = useRouter();
   const [selectedTypes, setSelectedTypes] = useState([]); // Manage selected dance types
   const danceTypes = ["Salsa", "Bachata", "Kizomba"];
-
   // Toggle the selection of a dance type
   const handleSelectType = (type) => {
     if (selectedTypes.includes(type)) {
@@ -40,8 +40,6 @@ const Index = () => {
     }
     console.log(selectedTypes);
   };
-  let manImg =
-  "https://media.istockphoto.com/id/1354776457/vector/default-image-icon-vector-missing-picture-page-for-website-design-or-mobile-app-no-photo.jpg?s=612x612&w=0&k=20&c=w3OW0wX3LyiFRuDHo9A32Q0IUMtD4yjXEvQlqyYk9O4=";
 
   useEffect(() => {
     const userDataString = localStorage.getItem("userdata");
@@ -231,9 +229,10 @@ const Index = () => {
         display={"flex"}
         alignItems={"center"}
         flexDirection={"column"}
+        mt={2}
         onClick={()=> router.push("/profile")}
       >
-        <Avatar size={"md"} src={userData["photo_url"] || manImg}  mt={2} />
+        <Image height={50} width={50} objectFit="cover" src={userData["photo_url"] || emptyUser}  />
         <Text fontSize={"18px"} color="white" fontWeight={400}  textAlign={"center"}>
           {userData["display_name"]}
         </Text>

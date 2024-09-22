@@ -18,6 +18,7 @@ import {
   useToast,
   Grid,
   Divider,
+  Input,
 } from "@chakra-ui/react";
 import {
   FiArrowLeft,
@@ -117,21 +118,28 @@ const index = () => {
       console.error("Error during sign out:", error);
     }
   };
+  const handleReturn = () => {
+    if (hide){
+      setHide(false);
+    }else{
+      router.push("/home")
+    }
+  };
   return (
     <Grid
+    height={hide ? "100vh" : "auto"}
       display={"flex"}
       justifyContent={"center"}
-      height={"100vh"}
       alignItems={"center"}
       backgroundImage="url('/assets/backgroundImage.png')"
     >
       <Head>
-        <title>Create Event</title>
+        <title>Profile</title>
       </Head>
       <Box
         width={["100%","70%", "50%"]}
         padding={["20px", "40px"]}
-        margin={["10px","auto"]}
+        margin={"10px"}
         my={10}
         backgroundColor="#F6F6F6"
         border="1px solid #E0E0E0"
@@ -144,7 +152,7 @@ const index = () => {
             <Icon
               as={FiArrowLeft}
               boxSize={6}
-              onClick={() => router.push("/home")}
+              onClick={handleReturn}
             />
           </Button>
           <Box display="flex" alignItems="center" flexDirection="column">
@@ -158,12 +166,33 @@ const index = () => {
             </Heading>
           </Box>
         </HStack>
+{hide?(
+   <VStack spacing="4" align="stretch">
+   <Input
+     placeholder="Name"
+     value={name}
+     onChange={(e) => setName(e.target.value)}
+   />
+   <Input
+     placeholder="Email"
+     value={email}
+     onChange={(e) => setEmail(e.target.value)}
+   />
+   <Input
+     placeholder="Phone"
+     value={phone}
+     onChange={(e) => setPhone(e.target.value)}
+   />
+   <Input type="file" onChange={handleFileChange} />
+   <Button onClick={updateProfile}>Save Profile</Button>
+ </VStack>
+):(
+  <Box>
 
-        {/* Account Section */}
         <VStack spacing="4" align="stretch" mb="6">
           <Heading size="sm">Your Account</Heading>
           <Link
-            href="/edit-profile"
+            onClick={()=> setHide(true)}
             display="flex"
             justifyContent="space-between"
             alignItems="center"
@@ -203,7 +232,7 @@ const index = () => {
             borderRadius="12px"
             boxShadow="0 2px 8px rgba(0, 0, 0, 0.1)"
             p={"15px"}
-          >
+            >
             <HStack>
               <Icon as={FiCalendar} />
               <Text>Edit Courses</Text>
@@ -224,7 +253,7 @@ const index = () => {
             borderRadius="12px"
             boxShadow="0 2px 8px rgba(0, 0, 0, 0.1)"
             p={"15px"}
-          >
+            >
             <HStack>
               <Icon as={FiMail} />
               <Text>Email Us</Text>
@@ -256,9 +285,12 @@ const index = () => {
           w="full"
           leftIcon={<FiLogOut />}
           onClick={handleClick}
-        >
+          >
           Log Out
         </Button>
+</Box>
+)}
+
       </Box>
     </Grid>
   );
