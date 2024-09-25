@@ -270,6 +270,7 @@ const Index = () => {
           bgColor={"#0091fa"}
           borderRadius={"40px"}
           p={2}
+          cursor={"pointer"}
           onClick={() => addToFavorites(images.docid)}
         >
           <Icon

@@ -169,7 +169,7 @@ export function createFirebaseAccountAndDocument(userData) {
       localStorage.setItem("userId",  user.uid);
       localStorage.setItem(
         "userdata",
-        JSON.stringify(userDoc.data())
+        JSON.stringify(userDoc)
       );
       resolve("alert.message.login");
       console.log("Document written with ID: ", docRef.id);

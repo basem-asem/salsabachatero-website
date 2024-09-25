@@ -66,7 +66,7 @@ const Index = () => {
   const handleFileUpload = async (file) => {
     try {
       const fileName = `jvnw7gh-${file.name}`;
-      const storageRef = ref(storage, `userFiles/${fileName}`);
+      const storageRef = ref(storage, `users/${fileName}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
       const snapshot = await uploadTask;
       const url = await getDownloadURL(snapshot.ref);
@@ -82,19 +82,17 @@ const Index = () => {
     if (selectedFile) {
    
       const downloadURL = await handleFileUpload(selectedFile);
-    
-    let phoneNumber = null;
-    
+        
     setInLogin(true);
 
-    console.log({...data,photo_url: downloadURL,phone: phoneNumber ? phoneNumber.number : null,})
+    console.log({...data,photo_url: downloadURL,phone: phone ? phone : null,})
     if (data.email && data.password ) {
       createFirebaseAccountAndDocument({
         ...data,
         photo_url: downloadURL,
-        phone: phoneNumber ? phoneNumber.number : null,
+        phone: phone ? phone : null,
       })
-        .then(async (alertMassage) => {
+        .then((alertMassage) => {
 
           setAlert(t(alertMassage), "success", true);
           setTimeout(() => {
@@ -178,6 +176,7 @@ const Index = () => {
       alignItems="center"
       justifyContent="center"
       flexDirection="column"
+      backgroundSize={"cover"}
       backgroundImage="url('/assets/backgroundImage.png')"
       >
       <Title name={"Register"} />

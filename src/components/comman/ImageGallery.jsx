@@ -84,7 +84,7 @@ console.log(events);
 
   return (
     <Box width={"full"}>
-      <HStack style={{ display: "block" }}>
+      {images.length > 0 ?(<HStack style={{ display: "block" }}>
         <HStack display={"flex"} justifyContent={"center"}>
           {isLoading ? (
             <Grid
@@ -225,7 +225,10 @@ console.log(events);
             </Swiper>
           )}
         </HStack>
-      </HStack>
+      </HStack>):
+        course?(<HStack display={"flex"} height="75vh" justifyContent={"center"} color={"red.600"}><Text style={{fontSize:"20px"}} textAlign={"center"} fontWeight={600}>No dance courses in this address</Text></HStack>):(<HStack display={"flex"} height="75vh" justifyContent={"center"} color={"red.600"}><Text style={{fontSize:"20px"}} textAlign={"center"} fontWeight={600}>No dance events in this address</Text></HStack>)
+      }
+      
     </Box>
   );
 };

@@ -140,7 +140,7 @@ const Index = () => {
       const eventsQuery = query(
         collection(db, "courses"),
         where("date", ">=", currentTime),
-        // where("type", "array-contains-any", selectedTypes)
+        where("type", "array-contains-any", selectedTypes.length > 0 ? selectedTypes : danceTypes)
       );
 
       const eventsSnapshot = await getDocs(eventsQuery);
@@ -215,6 +215,7 @@ const Index = () => {
       overflow={"auto"}
       height={"100vh"}
       gap={15}
+      backgroundSize={"cover"}
       backgroundImage="url('/assets/backgroundImage.png')"
     >
       <Title name={"Home"} />
@@ -230,9 +231,10 @@ const Index = () => {
         alignItems={"center"}
         flexDirection={"column"}
         mt={2}
+        cursor={"pointer"}
         onClick={()=> router.push("/profile")}
       >
-        <Image height={50} width={50} objectFit="cover" src={userData["photo_url"] || emptyUser}  />
+        <Image height={50} width={50} src={userData["photo_url"] || emptyUser} style={{borderRadius:"100%", height:"50px", objectFit:"cover"}}  />
         <Text fontSize={"18px"} color="white" fontWeight={400}  textAlign={"center"}>
           {userData["display_name"]}
         </Text>

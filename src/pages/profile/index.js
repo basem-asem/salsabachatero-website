@@ -30,16 +30,18 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 import Head from "next/head";
+import { Create_Update_Doc, getDocumentData } from "@/firebase/firebaseutils";
 
 export let manImg =
   "https://media.istockphoto.com/id/1354776457/vector/default-image-icon-vector-missing-picture-page-for-website-design-or-mobile-app-no-photo.jpg?s=612x612&w=0&k=20&c=w3OW0wX3LyiFRuDHo9A32Q0IUMtD4yjXEvQlqyYk9O4=";
 
 const index = () => {
   const { t } = useTranslation();
-  const [hide, setHide] = useState(false);
+  const [hide, setHide] = useState(0);
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [privacy, setPrivacy] = useState("");
   const [userData, setUserData] = useState({});
   const [selectedFile, setSelectedFile] = useState(null); // new state variable for file
   const toast = useToast();
@@ -47,15 +49,24 @@ const index = () => {
 
   useEffect(() => {
     const userDataString = localStorage.getItem("userdata");
-    if (userDataString) {
-      const parsedUserData = JSON.parse(userDataString);
-      setUserData(parsedUserData);
+    const parsedUserData = JSON.parse(userDataString);
+    setUserData(parsedUserData);
+    if (userDataString&& hide == 1) {
       setName(parsedUserData.display_name);
       setEmail(parsedUserData.email);
       setPhone(parsedUserData.phone_number);
+    }else{
+      setEmail("");
+      setPhone("");
+      setName("");
     }
-  }, []);
-
+  }, [hide]);
+  useEffect(() => {
+    if (hide == 5){
+      getDocumentData("appInfo", "e2x5U3lTXMtp7kV5N9tP").then((data) => setPrivacy(data.privacy));
+      console.log(privacy);
+    }
+  }, [hide]);
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
   };
@@ -96,7 +107,10 @@ const index = () => {
         duration: 5000,
         isClosable: true,
       });
-      setHide(false);
+      setEmail("");
+      setPhone("");
+      setName("");
+      setHide(0);
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
@@ -119,18 +133,36 @@ const index = () => {
     }
   };
   const handleReturn = () => {
-    if (hide){
-      setHide(false);
+    if (hide!=0){
+      setHide(0);
     }else{
       router.push("/home")
     }
   };
+  const sendEmail = () => {
+    const date = new Date();
+    const data = {comment: phone, email: email, name: name, date: date};
+    Create_Update_Doc("contactUs",data).then(() => {
+      toast({
+        title: "Message sent.",
+        description: "Your message has been sent successfully.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      setEmail("");
+      setPhone("");
+      setName("");
+      setHide(0);
+    });
+  };
   return (
     <Grid
-    height={hide ? "100vh" : "auto"}
+    height={hide == 1||hide == 4  ? "100vh" : "auto"}
       display={"flex"}
       justifyContent={"center"}
       alignItems={"center"}
+      backgroundSize={"cover"}
       backgroundImage="url('/assets/backgroundImage.png')"
     >
       <Head>
@@ -147,7 +179,7 @@ const index = () => {
         boxShadow="0 2px 8px rgba(0, 0, 0, 0.1)"
       >
         {/* Header */}
-        <HStack mb="6" alignItems="center" justifyContent={"space-between"}>
+        <HStack mb="6" alignItems="center" justifyContent={hide ==0||hide ==1?"space-between":""}>
           <Button variant="ghost" p="0">
             <Icon
               as={FiArrowLeft}
@@ -155,18 +187,25 @@ const index = () => {
               onClick={handleReturn}
             />
           </Button>
-          <Box display="flex" alignItems="center" flexDirection="column">
+          {hide ==0||hide ==1?(
+
+            <Box display="flex" alignItems="center" flexDirection="column">
             <Avatar
               src={userData["photo_url"] ? userData["photo_url"] : manImg}
               size="lg"
               ml="4"
-            />
+              />
             <Heading size="lg" ml="4">
               {name}
             </Heading>
           </Box>
+            ):(
+              <Text margin={"auto"} fontWeight={700} style={{fontSize:"20px"}}>
+                {hide == 5? "Privacy & Policy": "Contact Us"}
+              </Text>
+            )}
         </HStack>
-{hide?(
+{hide==1?(
    <VStack spacing="4" align="stretch">
    <Input
      placeholder="Name"
@@ -186,13 +225,13 @@ const index = () => {
    <Input type="file" onChange={handleFileChange} />
    <Button onClick={updateProfile}>Save Profile</Button>
  </VStack>
-):(
+):hide == 0 ? (
   <Box>
 
         <VStack spacing="4" align="stretch" mb="6">
           <Heading size="sm">Your Account</Heading>
           <Link
-            onClick={()=> setHide(true)}
+            onClick={()=> setHide(1)}
             display="flex"
             justifyContent="space-between"
             alignItems="center"
@@ -245,7 +284,7 @@ const index = () => {
         <VStack spacing="4" align="stretch" mb="6">
           <Heading size="sm">App Settings</Heading>
           <Link
-            href="/email-us"
+            onClick={()=> setHide(4)}
             display="flex"
             justifyContent="space-between"
             alignItems="center"
@@ -261,7 +300,7 @@ const index = () => {
             <Icon as={FiArrowLeft} transform="rotate(180deg)" />
           </Link>
           <Link
-            href="/privacy-policy"
+            onClick={()=> setHide(5)}
             display="flex"
             justifyContent="space-between"
             alignItems="center"
@@ -289,6 +328,25 @@ const index = () => {
           Log Out
         </Button>
 </Box>
+):hide==5?(<Text>{privacy}</Text>):(
+<VStack spacing="4" align="stretch">
+   <Input
+     placeholder="Name"
+     value={name}
+     onChange={(e) => setName(e.target.value)}
+   />
+   <Input
+     placeholder="Email"
+     value={email}
+     onChange={(e) => setEmail(e.target.value)}
+   />
+   <Input
+     placeholder="Comment"
+     value={phone}
+     onChange={(e) => setPhone(e.target.value)}
+   />
+   <Button onClick={sendEmail}>Submit</Button>
+ </VStack>
 )}
 
       </Box>

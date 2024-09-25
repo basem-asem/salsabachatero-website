@@ -150,6 +150,7 @@ export default function Home() {
       flexDirection="column"
       overflow="auto"
       height="100vh"
+      backgroundSize={"cover"}
       backgroundImage="url('/assets/backgroundImage.png')"
     >
       <Title name={"Login"} />

@@ -47,8 +47,9 @@ const ForgotPassword = () => {
     alignItems="center"
     justifyContent="center"
     flexDirection="column"
-    overflow="auto"
+    backgroundSize={"cover"}
     height="100vh"
+    px="20px"
     backgroundImage="url('/assets/backgroundImage.png')"
   >
     <Title name={"Forgot Password"} />
@@ -63,8 +64,9 @@ const ForgotPassword = () => {
     </Box>
     <Box
     pos={'relative'}
-      width="auto"
       padding="20px"
+      w={"100%"}
+      margin={'auto'}
       backgroundColor="white"
       borderRadius="12px"
       boxShadow="0px 4px 12px rgba(0, 0, 0, 0.1)"
@@ -106,7 +108,7 @@ const ForgotPassword = () => {
             borderRadius={"8px"}
             mt='8'
             boxShadow={"rgba(0, 0, 0, 0.16) 0px 1px 4px;"}
-            width={["full", "container.sm"]}
+            width={"full"}
             height={"auto"}
           >
             <Input
