@@ -33,8 +33,7 @@ import Head from "next/head";
 import { Create_Update_Doc, getDocumentData } from "@/firebase/firebaseutils";
 
 export let manImg =
-  "https://media.istockphoto.com/id/1354776457/vector/default-image-icon-vector-missing-picture-page-for-website-design-or-mobile-app-no-photo.jpg?s=612x612&w=0&k=20&c=w3OW0wX3LyiFRuDHo9A32Q0IUMtD4yjXEvQlqyYk9O4=";
-
+"https://firebasestorage.googleapis.com/v0/b/bachataalist-x7jsy8.appspot.com/o/users%2FemptyUser.jpg?alt=media&token=5b06dd23-78e6-4bd5-aca9-c47daf2ff880"
 const index = () => {
   const { t } = useTranslation();
   const [hide, setHide] = useState(0);
@@ -247,7 +246,7 @@ const index = () => {
             <Icon as={FiArrowLeft} transform="rotate(180deg)" />
           </Link>
           <Link
-            href="/edit-events"
+            href="/myEvents"
             display="flex"
             justifyContent="space-between"
             alignItems="center"
@@ -263,7 +262,7 @@ const index = () => {
             <Icon as={FiArrowLeft} transform="rotate(180deg)" />
           </Link>
           <Link
-            href="/edit-events"
+            href="/myCourses"
             display="flex"
             justifyContent="space-between"
             alignItems="center"

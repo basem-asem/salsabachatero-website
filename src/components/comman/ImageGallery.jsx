@@ -19,11 +19,11 @@ import { db } from "@/firebase/firebase";
 import { IoIosPin } from "react-icons/io";
 import Link from "next/link";
 
-const ImageGallery = ({ fav, events, course }) => {
+const ImageGallery = ({ fav, events, course, myCourse, myEvent }) => {
   const { t } = useTranslation();
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-console.log(events);
+  console.log(isLoading);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -42,31 +42,40 @@ console.log(events);
                 const eventDoc = await getDoc(eventRef);
 
                 // Return the event data along with its docid
-                return eventDoc.exists() ? { docid: eventId, ...eventDoc.data() } : null;
+                return eventDoc.exists()
+                  ? { docid: eventId, ...eventDoc.data() }
+                  : null;
               })
             );
 
             setImages(favoriteEvents.filter((event) => event !== null));
           }
-        } else if(course == true) {
+        } else if (course == true) {
           // Fetch non-favorite events by ids
           const eventsResult = await Promise.all(
             events.map(async (id) => {
               const eventRef = doc(db, "courses", id);
               const eventDoc = await getDoc(eventRef);
-              return eventDoc.exists() ? { docid: id, ...eventDoc.data() } : null;
+              return eventDoc.exists()
+                ? { docid: id, ...eventDoc.data() }
+                : null;
             })
           );
 
           setImages(eventsResult.filter((event) => event !== null));
-        }else{
-          
+        } else if (myCourse) {
+          setImages(events);
+        } else if (myEvent) {
+          setImages(events);
+        } else {
           // Fetch non-favorite events by ids
           const eventsResult = await Promise.all(
             events.map(async (id) => {
               const eventRef = doc(db, "events", id);
               const eventDoc = await getDoc(eventRef);
-              return eventDoc.exists() ? { docid: id, ...eventDoc.data() } : null;
+              return eventDoc.exists()
+                ? { docid: id, ...eventDoc.data() }
+                : null;
             })
           );
 
@@ -80,22 +89,22 @@ console.log(events);
     };
 
     fetchData();
-  }, [fav, events,course]);
+  }, [fav, events, course, myCourse, myEvent, isLoading]);
 
   return (
     <Box width={"full"}>
-      {images.length > 0 ?(<HStack style={{ display: "block" }}>
-        <HStack display={"flex"} justifyContent={"center"}>
-          {isLoading ? (
-            <Grid
-              item
-              xs={12}
-              textAlign="center"
-              style={{ justifyContent: "center", display: "flex" }}
-            >
-              <CircularProgress isIndeterminate />
-            </Grid>
-          ) : (
+      {isLoading ? (
+        <Grid
+          item
+          xs={12}
+          textAlign="center"
+          style={{ justifyContent: "center", display: "flex" }}
+        >
+          <CircularProgress isIndeterminate />
+        </Grid>
+      ) : images.length > 0 ? (
+        <HStack style={{ display: "block" }}>
+          <HStack display={"flex"} justifyContent={"center"}>
             <Swiper
               effect={"coverflow"}
               loop={true}
@@ -128,13 +137,22 @@ console.log(events);
                     borderRadius: "8px",
                   }}
                 >
-                  <Link href={course?`/courseDetalis/${img.docid}`:`/eventDetalis/${img.docid}`}>
+                  <Link
+                    href={
+                      myCourse
+                        ? `/editMyCourse/${img.docid}`
+                        : myEvent
+                        ? `/editMyEvent/${img.docid}`
+                        : course
+                        ? `/courseDetalis/${img.docid}`
+                        : `/eventDetalis/${img.docid}`
+                    }
+                  >
                     <img
                       src={img.eventPhoto}
                       alt={`Slide ${i}`}
                       style={{ height: "75vh", borderRadius: "10px" }}
                     />
-                    {/* Black overlay at the bottom */}
                     <Box
                       position="absolute"
                       bottom="0"
@@ -162,18 +180,17 @@ console.log(events);
                           </React.Fragment>
                         ))}
                       </Box>
-                     {course?(
-                       <Text fontSize="sm">
-                       Price Per {img.PaymentTime}: {img.event}{" "}
-                       {img.currency === "Euro" ? "€" : "$"}
-                       </Text>
-                     ):(
-                       <Text fontSize="sm">
-                       Price Entry: {img.event}{" "}
-                       {img.currency === "Euro" ? "€" : "$"}
-                       </Text>
-                      )
-                    }
+                      {course || myCourse ? (
+                        <Text fontSize="sm">
+                          Price Per {img.PaymentTime}: {img.event}{" "}
+                          {img.currency === "Euro" ? "€" : "$"}
+                        </Text>
+                      ) : (
+                        <Text fontSize="sm">
+                          Price Entry: {img.event}{" "}
+                          {img.currency === "Euro" ? "€" : "$"}
+                        </Text>
+                      )}
                       <Text fontSize="sm">
                         {new Date(img.date.seconds * 1000).toLocaleString(
                           "en-US",
@@ -223,12 +240,39 @@ console.log(events);
                 </SwiperSlide>
               ))}
             </Swiper>
-          )}
+          </HStack>
         </HStack>
-      </HStack>):
-        course?(<HStack display={"flex"} height="75vh" justifyContent={"center"} color={"red.600"}><Text style={{fontSize:"20px"}} textAlign={"center"} fontWeight={600}>No dance courses in this address</Text></HStack>):(<HStack display={"flex"} height="75vh" justifyContent={"center"} color={"red.600"}><Text style={{fontSize:"20px"}} textAlign={"center"} fontWeight={600}>No dance events in this address</Text></HStack>)
-      }
-      
+      ) : course || myCourse ? (
+        <HStack
+          display={"flex"}
+          height="75vh"
+          justifyContent={"center"}
+          color={"red.600"}
+        >
+          <Text
+            style={{ fontSize: "20px" }}
+            textAlign={"center"}
+            fontWeight={600}
+          >
+            No dance courses in this address
+          </Text>
+        </HStack>
+      ) : (
+        <HStack
+          display={"flex"}
+          height="75vh"
+          justifyContent={"center"}
+          color={"red.600"}
+        >
+          <Text
+            style={{ fontSize: "20px" }}
+            textAlign={"center"}
+            fontWeight={600}
+          >
+            No dance events in this address
+          </Text>
+        </HStack>
+      )}
     </Box>
   );
 };

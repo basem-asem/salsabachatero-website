@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Input, Avatar, Icon, Text } from "@chakra-ui/react";
+import { Box, Input, Avatar, Icon, Text, Progress } from "@chakra-ui/react";
 import { MdPerson, MdCheckCircle } from "react-icons/md"; // Added MdCheckCircle icon for video upload
 import Image from "next/image";
 
@@ -10,17 +10,42 @@ const FileUpload = ({
   setSelectedFile,
   selectedFile,
   square,
+  editImage,
+  setEditImage,
   videos = false,
 }) => {
+  const [uploading, setUploading] = useState(false); // State to manage upload status
+  const [progress, setProgress] = useState(0); // State to manage upload progress
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       setSelectedFile(file);
+      setUploading(true); // Start uploading process
+      simulateUpload(file); // Simulate the upload process (replace with actual upload function)
+    }
+    if (editImage) {
+      setEditImage(false);
     }
   };
 
+  // Simulated file upload function to demonstrate the progress bar
+  const simulateUpload = (file) => {
+    const uploadDuration = 5000; // Simulate upload taking 5 seconds
+    let interval = setInterval(() => {
+      setProgress((prevProgress) => {
+        const newProgress = prevProgress + 20; // Increment by 20% for each interval
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setUploading(false); // Upload complete
+        }
+        return newProgress;
+      });
+    }, uploadDuration / 5); // Update progress every 1 second (5 intervals)
+  };
+
   return (
-    <Box textAlign="center" display={"flex"} flexDirection={"column"}>
+    <Box textAlign="center" display={"flex"} flexDirection={"column"} alignItems="center">
       <Input
         type="file"
         accept={videos ? "video/*" : "image/*"} // Accept only videos if videos=true, otherwise images
@@ -38,13 +63,19 @@ const FileUpload = ({
           overflow="hidden"
           position="relative"
           cursor="pointer"
-          alignItems={"center"}
-          display={"flex"}
-          flexDirection={"column"}
-          justifyContent={"center"}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
         >
           {selectedFile ? (
-            videos ? (
+            uploading ? (
+              <Box textAlign="center">
+                <Progress value={progress} size="xs" colorScheme="green" width="100px" />
+                <Text fontSize="sm" color="gray.500">
+                  Uploading...
+                </Text>
+              </Box>
+            ) : videos ? (
               <Box textAlign="center">
                 <Icon as={MdCheckCircle} boxSize={8} color="green.500" />
                 <Text fontSize="sm" color="green.500">
@@ -54,7 +85,7 @@ const FileUpload = ({
             ) : square ? (
               <Image
                 alt="uploadedImage"
-                src={URL.createObjectURL(selectedFile)}
+                src={editImage ? selectedFile : URL.createObjectURL(selectedFile)}
                 height={120}
                 width={120}
                 style={{ objectFit: "cover", height: "120px" }}
@@ -68,7 +99,7 @@ const FileUpload = ({
             )
           ) : (
             <Image
-              alt="defualtImage"
+              alt="defaultImage"
               src={manImg}
               height={120}
               width={120}

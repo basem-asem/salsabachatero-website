@@ -21,6 +21,8 @@ import { reload } from "firebase/auth";
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
 import emptyUser from "@/../../public/assets/emptyUser.jpg";
 import Image from "next/image";
+export let manImg =
+"https://firebasestorage.googleapis.com/v0/b/bachataalist-x7jsy8.appspot.com/o/users%2FemptyUser.jpg?alt=media&token=5b06dd23-78e6-4bd5-aca9-c47daf2ff880"  
 const Index = () => {
   const { t } = useTranslation();
   const [city, setCity] = useState("");
@@ -234,7 +236,11 @@ const Index = () => {
         cursor={"pointer"}
         onClick={()=> router.push("/profile")}
       >
-        <Image height={50} width={50} src={userData["photo_url"] || emptyUser} style={{borderRadius:"100%", height:"50px", objectFit:"cover"}}  />
+         <Avatar
+              src={userData["photo_url"] ? userData["photo_url"] : manImg}
+              size="lg"
+              ml="4"
+              />
         <Text fontSize={"18px"} color="white" fontWeight={400}  textAlign={"center"}>
           {userData["display_name"]}
         </Text>
@@ -294,7 +300,6 @@ const Index = () => {
         >
           Where do you want to dance?
         </Text>
-        
         <Box
           display={"flex"}
           justifyContent={"center"}
@@ -342,11 +347,11 @@ const Index = () => {
         >
           <Button
             h={"auto"}
-            px={4}
-            py={4}
             borderRadius={"3xl"}
             mx={"auto"}
             mr={4}
+            fontSize={["14px","md"]}
+            p={[".5rem", "1rem", "1rem", "1rem"]}
             bgColor={"#c4ecff"}
             whiteSpace={"break-spaces"}
             onClick={handleSearchCourses} //() => router.push("/events")
@@ -358,6 +363,7 @@ const Index = () => {
             maxW={"fit-content"}
             px={8}
             py={4}
+            fontSize={["14px","md"]}
             borderRadius={"3xl"}
             mx={"auto"}
             bgColor={"#c4ecff"}
