@@ -23,11 +23,15 @@ import { IoIosPin } from "react-icons/io";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import FileUpload from "../register/FileUpload";
-import { doc, GeoPoint, Timestamp } from "firebase/firestore"; // Import Timestamp from Firestore
+import { deleteDoc, doc, GeoPoint, Timestamp } from "firebase/firestore"; // Import Timestamp from Firestore
 import { format } from "date-fns";
 import { db, storage } from "@/firebase/firebase";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { Create_Update_Doc, getDocumentData, imageUploading } from "@/firebase/firebaseutils";
+import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  Create_Update_Doc,
+  getDocumentData,
+  imageUploading,
+} from "@/firebase/firebaseutils";
 
 const EventForm = () => {
   const router = useRouter();
@@ -52,12 +56,16 @@ const EventForm = () => {
           setLoadingPage(false);
           setFormData({
             ...image,
-            date: image.date ? format(image.date.toDate(), "yyyy-MM-dd'T'HH:mm") : time,
-            closeDate: image.closeDate ? format(image.closeDate.toDate(), "yyyy-MM-dd'T'HH:mm") : time,
+            date: image.date
+              ? format(image.date.toDate(), "yyyy-MM-dd'T'HH:mm")
+              : time,
+            closeDate: image.closeDate
+              ? format(image.closeDate.toDate(), "yyyy-MM-dd'T'HH:mm")
+              : time,
           });
           setSelectedFile(image.eventPhoto);
           setSelectedVid(image.eventVideo);
-          setPhone(image.phone)
+          setPhone(image.phone);
         } catch (error) {
           console.error("Error fetching data:", error);
         }
@@ -68,7 +76,7 @@ const EventForm = () => {
   }, [id]);
   const [showplaces, setShowplaces] = useState(true);
   const time = new Date().toISOString().slice(0, 16); // Set current time to match datetime-local input format
-  
+
   const [formData, setFormData] = useState({
     title: "",
     event: "",
@@ -84,8 +92,8 @@ const EventForm = () => {
     date: time,
     closeDate: time,
   });
-  console.log(formData)
-  
+  console.log(formData);
+
   useEffect(() => {
     // Whenever the phone state changes, update the formData's phone field
     setFormData((prevData) => ({ ...prevData, phone: phone }));
@@ -141,30 +149,33 @@ const EventForm = () => {
       setErrors(validationErrors);
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       // Ensure that the date values are valid Date objects before conversion to Timestamp
       const startDate = formData.date ? new Date(formData.date) : null;
       const endDate = formData.closeDate ? new Date(formData.closeDate) : null;
-  
+
       if (isNaN(startDate) || isNaN(endDate)) {
         throw new Error("Invalid date format");
       }
-  
+
       const startTimestamp = Timestamp.fromDate(startDate);
       const endTimestamp = Timestamp.fromDate(endDate);
-  
+
       // Fetch location and user information
       const formCity = localStorage.getItem("city");
       const formAdress = localStorage.getItem("address");
       const formLat = localStorage.getItem("latitude");
       const formLong = localStorage.getItem("longitude");
-      const formLatLong = new GeoPoint(parseFloat(formLat), parseFloat(formLong));
+      const formLatLong = new GeoPoint(
+        parseFloat(formLat),
+        parseFloat(formLong)
+      );
       const userIdString = localStorage.getItem("userId");
       const userRef = doc(db, "users", userIdString);
-  
+
       let updatedFormData = {
         ...formData,
         city: formCity,
@@ -174,28 +185,34 @@ const EventForm = () => {
         closeDate: endTimestamp, // Use Firebase Timestamp
         host: userRef,
       };
-  
+
       // Upload files if needed
       let imageDownloadURL = "";
       let videoDownloadURL = "";
-  
+
       if (selectedFile) {
-        const imageRef = ref(storage, `users/${userIdString}/eventImages/${selectedFile.name}`);
+        const imageRef = ref(
+          storage,
+          `users/${userIdString}/eventImages/${selectedFile.name}`
+        );
         await uploadBytes(imageRef, selectedFile);
         imageDownloadURL = await getDownloadURL(imageRef);
         updatedFormData = { ...updatedFormData, eventPhoto: imageDownloadURL };
       }
-  
+
       if (selectedVid) {
-        const videoRef = ref(storage, `users/${userIdString}/eventVideos/${selectedVid.name}`);
+        const videoRef = ref(
+          storage,
+          `users/${userIdString}/eventVideos/${selectedVid.name}`
+        );
         await uploadBytes(videoRef, selectedVid);
         videoDownloadURL = await getDownloadURL(videoRef);
         updatedFormData = { ...updatedFormData, eventVideo: videoDownloadURL };
       }
-  
+
       // Save updated form data
       await Create_Update_Doc("events", updatedFormData, id);
-  
+
       setLoading(false);
       toast({
         title: "Event added successfully!",
@@ -215,7 +232,7 @@ const EventForm = () => {
       setLoading(false);
     }
   };
-  
+
   const handleLocationUpdate = () => {
     navigator.geolocation.getCurrentPosition((position) => {
       const { latitude, longitude } = position.coords;
@@ -249,7 +266,51 @@ const EventForm = () => {
         });
     });
   };
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this event?")) {
+      try {
+        if(formData.eventPhoto){
+          await deleteImageFromStorage(formData.eventPhoto);
+        }
+        if(formData.eventVideo){
+          await deleteImageFromStorage(formData.eventVideo);
+        }
+        await deleteDoc(doc(db, "events", id));
+        toast({
+          title: "Event deleted successfully!",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+        router.push("/myEvents");
+      } catch (error) {
+        toast({
+          title: "Failed to delete Event!",
+          status: "error",
+          description: error.message,
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    }
+  };
+  const deleteImageFromStorage = async (fileUrl) => {
+    try {
+      // Decode the URL to get the storage file path
+      const filePath = decodeURIComponent(
+        fileUrl.split("/o/")[1].split("?")[0].replace("%2F", "/")
+      );
 
+      // Create a reference to the file to delete
+      const fileRef = ref(storage, filePath);
+
+      // Delete the file
+      await deleteObject(fileRef);
+      console.log("File deleted successfully");
+    } catch (error) {
+      console.error("Error deleting file:", error);
+    }
+  };
   return (
     <>
       <Grid
@@ -259,7 +320,7 @@ const EventForm = () => {
         backgroundImage="url('/assets/backgroundImage.png')"
       >
         <Head>
-          <title>Create Event</title>
+          <title>My Event</title>
         </Head>
         <Box
           width={["auto", "auto", "50%"]}
@@ -309,9 +370,7 @@ const EventForm = () => {
                     padding="16px"
                     fontSize="1rem"
                   />
-                  {errors.title && (
-                    <Text color="red.500">{errors.title}</Text>
-                  )}
+                  {errors.title && <Text color="red.500">{errors.title}</Text>}
                 </InputGroup>
 
                 <InputGroup display="flex" alignItems={"center"}>
@@ -522,20 +581,38 @@ const EventForm = () => {
                   </Box>
                 </InputGroup>
 
-                <Button
-                  mt={10}
-                  variant={"solid"}
-                  size={"lg"}
-                  borderRadius={"30px"}
-                  bgColor={"#f9cf58"}
-                  width={"100%"}
-                  type="button"
-                  isLoading={loading}  // Use isLoading prop
-                  _loading={loading}
-                  onClick={handleSubmit}
-                >
-                  Submit
-                </Button>
+                <Box display={"flex"} gap={5}>
+                  <Button
+                    mt={10}
+                    variant={"solid"}
+                    size={"lg"}
+                    borderRadius={"30px"}
+                    bgColor={"#f9cf58"}
+                    width={"100%"}
+                    type="button"
+                    color={"white"}
+                    isLoading={loading} // Use isLoading prop
+                    _loading={loading}
+                    onClick={handleSubmit}
+                  >
+                    Submit
+                  </Button>
+                  <Button
+                    mt={10}
+                    variant={"solid"}
+                    size={"lg"}
+                    borderRadius={"30px"}
+                    bgColor={"#e53e3e"}
+                    color={"white"}
+                    width={"100%"}
+                    type="button"
+                    isLoading={loading} // Use isLoading prop
+                    _loading={loading}
+                    onClick={handleDelete}
+                  >
+                    Delete Event
+                  </Button>
+                </Box>
               </>
             )}
           </Stack>

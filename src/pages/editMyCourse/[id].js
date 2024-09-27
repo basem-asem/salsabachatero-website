@@ -23,10 +23,10 @@ import { IoIosPin } from "react-icons/io";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import FileUpload from "../register/FileUpload";
-import { doc, GeoPoint, Timestamp } from "firebase/firestore"; // Import Timestamp from Firestore
+import { deleteDoc, doc, GeoPoint, Timestamp } from "firebase/firestore"; // Import Timestamp from Firestore
 import { format } from "date-fns";
 import { db, storage } from "@/firebase/firebase";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Create_Update_Doc, getDocumentData, imageUploading } from "@/firebase/firebaseutils";
 
 const EventForm = () => {
@@ -251,7 +251,54 @@ const EventForm = () => {
         });
     });
   };
+const handleDelete = async ()=>{
+  if(window.confirm("Are you sure you want to delete this course?")) {
+    try {
+      if(formData.eventPhoto){
+        await deleteImageFromStorage(formData.eventPhoto);
+      }
+      if(formData.eventVideo){
+        await deleteImageFromStorage(formData.eventVideo);
+      }
+      await deleteDoc(doc(db, "courses", id));
+        toast({
+        title: "Course deleted successfully!",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      router.push("/myCourses");
+    } catch (error) {
+      toast({
+        title: "Failed to delete Course!",
+        status: "error",
+        description: error.message,
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }
+}
+const deleteImageFromStorage = async (fileUrl) => {
+  try {
+    // Decode the URL to get the storage file path
+    const filePath = decodeURIComponent(
+      fileUrl
+        .split("/o/")[1]
+        .split("?")[0]
+        .replace("%2F", "/")
+    );
 
+    // Create a reference to the file to delete
+    const fileRef = ref(storage, filePath);
+
+    // Delete the file
+    await deleteObject(fileRef);
+    console.log("File deleted successfully");
+  } catch (error) {
+    console.error("Error deleting file:", error);
+  }
+};
   return (
     <>
       <Grid
@@ -261,7 +308,7 @@ const EventForm = () => {
         backgroundImage="url('/assets/backgroundImage.png')"
       >
         <Head>
-          <title>Create Event</title>
+          <title>My Course</title>
         </Head>
         <Box
           width={["auto", "auto", "50%"]}
@@ -549,6 +596,7 @@ const EventForm = () => {
                     )}
                   </Box>
                 </InputGroup>
+                    <Box display={"flex"} gap={5} >
 
                 <Button
                   mt={10}
@@ -558,12 +606,29 @@ const EventForm = () => {
                   bgColor={"#f9cf58"}
                   width={"100%"}
                   type="button"
+                  color={"white"}
                   isLoading={loading}  // Use isLoading prop
                   _loading={loading}
                   onClick={handleSubmit}
                 >
                   Submit
                 </Button>
+                <Button
+                  mt={10}
+                  variant={"solid"}
+                  size={"lg"}
+                  borderRadius={"30px"}
+                  bgColor={"#e53e3e"}
+                  color={"white"}
+                  width={"100%"}
+                  type="button"
+                  isLoading={loading}  // Use isLoading prop
+                  _loading={loading}
+                  onClick={handleDelete}
+                >
+                  Delete Course
+                </Button>
+                  </Box>
               </>
             )}
           </Stack>

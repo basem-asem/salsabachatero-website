@@ -21,10 +21,8 @@ const Index = () => {
     const userRef = doc(db,"users", userId)
     getFilteredData("courses", "host",userRef).then(data =>{
       setCourses(data);
-      console.log(data);
     });
   }, []);
-  console.log(courses)
   return (
     <Box
       display="flex"
@@ -35,7 +33,7 @@ const Index = () => {
       gap={5}
       mx={5}
     >
-      <Title name={"Home"} />
+      <Title name={"My Courses"} />
       <Icon
         pos={"absolute"}
         m={2}

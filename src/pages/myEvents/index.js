@@ -35,7 +35,7 @@ const Index = () => {
       gap={5}
       mx={5}
     >
-      <Title name={"Home"} />
+      <Title name={"My Events"} />
       <Icon
         pos={"absolute"}
         m={2}
@@ -47,7 +47,7 @@ const Index = () => {
         onClick={() => router.push("/profile")}
       />
       <Text color="#b42d29" style={{fontSize:"24px"}} fontWeight={600} textAlign={"center"}>
-      Dance Courses
+      Dance Events
       </Text>
       <Box display="flex" flexDirection="row" justifyContent={"center"} gap={5}>
         <Icon as={IoArrowUndoSharp} w={8} h={8} color="black" />
