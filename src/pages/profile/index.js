@@ -126,7 +126,7 @@ const index = () => {
     try {
       await auth.signOut();
       localStorage.clear();
-      router.push("/");
+      router.push("/login");
     } catch (error) {
       console.error("Error during sign out:", error);
     }
@@ -135,7 +135,7 @@ const index = () => {
     if (hide!=0){
       setHide(0);
     }else{
-      router.push("/home")
+      router.push("/")
     }
   };
   const sendEmail = () => {

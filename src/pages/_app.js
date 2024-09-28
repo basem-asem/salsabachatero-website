@@ -12,12 +12,12 @@ import { Provider } from "react-redux";
 export default function App({ Component, pageProps }) {
   const router = useRouter();
 
-  useEffect(() => {
+  // useEffect(() => {
    
-    if (localStorage.getItem("userId")) {
-      router.push("/");
-    }
-  }, []);
+  //   if (localStorage.getItem("userId")) {
+  //     router.push("/");
+  //   }
+  // }, []);
 
 
   useEffect(() => {

@@ -52,7 +52,7 @@ export default function Home() {
                 "userdata",
                 JSON.stringify(userdocSnap.data())
               );
-              router.push("/home");
+              router.push("/");
               setInLogin(false);
             }, 2000);
           } else {
@@ -91,7 +91,7 @@ export default function Home() {
         setTimeout(() => {
           localStorage.setItem("userId", user.uid);
           localStorage.setItem("userdata", JSON.stringify(userdocSnap.data()));
-          router.push("/home");
+          router.push("/");
           setInLogin(false);
         }, 2000);
       } else {
@@ -120,7 +120,7 @@ export default function Home() {
               uid: user.uid,
             })
           );
-          router.push("/home");
+          router.push("/");
           setInLogin(false);
         }, 2000);
       }
