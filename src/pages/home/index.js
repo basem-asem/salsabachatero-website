@@ -238,8 +238,7 @@ const Index = () => {
       >
          <Avatar
               src={userData["photo_url"] ? userData["photo_url"] : manImg}
-              size="lg"
-              ml="4"
+              size="md"
               />
         <Text fontSize={"18px"} color="white" fontWeight={400}  textAlign={"center"}>
           {userData["display_name"]}
