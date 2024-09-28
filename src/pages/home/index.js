@@ -350,7 +350,8 @@ const Index = () => {
             mx={"auto"}
             mr={4}
             fontSize={["14px","md"]}
-            p={[".5rem", "1rem", "1rem", "1rem"]}
+            px={[".5rem",".5rem", "1rem", "1rem", "1rem"]}
+            py={["1rem","1rem", "1rem", "1rem", "1rem"]}
             bgColor={"#c4ecff"}
             whiteSpace={"break-spaces"}
             onClick={handleSearchCourses} //() => router.push("/events")
