@@ -1,322 +1,445 @@
-import React, { useEffect, useState } from "react";
-import { FcGoogle } from "react-icons/fc";
-import {
-  Box,
-  Button,
-  HStack,
-  Heading,
-  Text,
-  Input,
-  CircularProgress,
-  Alert,
-  AlertIcon,
-} from "@chakra-ui/react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 import useTranslation from "@/hooks/useTranslation";
-import Head from "next/head";
+import { Box, Avatar, Text, Button, Icon, useToast } from "@chakra-ui/react";
+import { useDispatch } from "react-redux";
+import { setUserLocation } from "@/redux/locationSlice";
 import Title from "@/components/Title";
-import { useForm } from "react-hook-form";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore"; // Ensure you import setDoc in case you need to create new users
-import { auth, db, provider } from "src/firebase/firebase"; // Ensure provider is initialized in firebase.js
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import { AdressMap } from "@/components/Address/map";
+import { IoIosPin } from "react-icons/io";
 import { useRouter } from "next/router";
+import { getDistance } from "geolib";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
+import { db } from "@/firebase/firebase";
+import { reload } from "firebase/auth";
+import { FaHeart, FaRegHeart } from "react-icons/fa6";
+import emptyUser from "@/../../public/assets/emptyUser.jpg";
 import Image from "next/image";
-import Logo from "@/../../public/assets/Logo.png";
-
-export default function Home() {
+export let manImg =
+"https://firebasestorage.googleapis.com/v0/b/bachataalist-x7jsy8.appspot.com/o/users%2FemptyUser.jpg?alt=media&token=5b06dd23-78e6-4bd5-aca9-c47daf2ff880"  
+const Index = () => {
   const { t } = useTranslation();
-  const [inLogin, setInLogin] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [messagetype, setMessagetype] = useState("error");
-  const [errorAlert, setErrorAlert] = useState(false);
-  const [passwordVisible, setPasswordVisible] = useState(false); // Rename this for clarity
+  const [city, setCity] = useState("");
+  const [showplaces, setShowplaces] = useState(true);
+  const [userData, setUserData] = useState({});
+  const dispatch = useDispatch();
+  const toast = useToast();
   const router = useRouter();
-  const { register, handleSubmit } = useForm();
-
-  // Handle email/password login
-  const onSubmit = (data) => {
-    if (data.email && data.passwordVal) {
-      setInLogin(true);
-      signInWithEmailAndPassword(auth, data.email, data.passwordVal)
-        .then(async (userresult) => {
-          const userdocRef = doc(db, "users", userresult.user.uid);
-          const userdocSnap = await getDoc(userdocRef);
-          if (userdocSnap.exists()) {
-            setMessagetype("success");
-            setErrorMessage(t("alert.message.login"));
-            setErrorAlert(true);
-            setTimeout(() => {
-              localStorage.setItem("userId", userdocSnap.id);
-              localStorage.setItem(
-                "userdata",
-                JSON.stringify(userdocSnap.data())
-              );
-              router.push("/home");
-              setInLogin(false);
-            }, 2000);
-          } else {
-            setInLogin(false);
-            setErrorMessage(t("login.invalid"));
-            setErrorAlert(true);
-          }
-        })
-        .catch((err) => {
-          setInLogin(false);
-          setErrorMessage(t("login.invalid"));
-          setErrorAlert(true);
-        });
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState([]); // Manage selected dance types
+  const danceTypes = ["Salsa", "Bachata", "Kizomba"];
+  // Toggle the selection of a dance type
+  const handleSelectType = (type) => {
+    if (selectedTypes.includes(type)) {
+      setSelectedTypes(selectedTypes.filter((item) => item !== type)); // Remove type if already selected
     } else {
-      setInLogin(false);
-      setErrorMessage(t("login.noInputerror"));
-      setErrorAlert(true);
+      setSelectedTypes([...selectedTypes, type]); // Add type if not selected
     }
+    console.log(selectedTypes);
   };
 
-  // Handle Google login
-  const handleGoogleSignIn = async () => {
-    try {
-      setInLogin(true);
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userdocRef = doc(db, "users", user.uid);
-      const userdocSnap = await getDoc(userdocRef);
-
-      if (userdocSnap.exists()) {
-        // User exists in Firestore, proceed to login
-        setMessagetype("success");
-        setErrorMessage(t("alert.message.login"));
-        setErrorAlert(true);
-        setTimeout(() => {
-          localStorage.setItem("userId", user.uid);
-          localStorage.setItem("userdata", JSON.stringify(userdocSnap.data()));
-          router.push("/home");
-          setInLogin(false);
-        }, 2000);
-      } else {
-        // If the user doesn't exist, you can create a new user document
-        await setDoc(doc(db, "users", user.uid), {
-          email: user.email,
-          display_name: user.displayName,
-          photo_url: user.photoURL, // Include the user's photo URL here
-          phone: user.phoneNumber,
-          uid: user.uid,
-          // Add other fields as required
-        });
-
-        setMessagetype("success");
-        setErrorMessage(t("alert.message.login"));
-        setErrorAlert(true);
-        setTimeout(() => {
-          localStorage.setItem("userId", user.uid);
-          localStorage.setItem(
-            "userdata",
-            JSON.stringify({
-              email: user.email,
-              display_name: user.displayName,
-              photo_url: user.photoURL, // Include the user's photo URL here
-              phone: user.phoneNumber,
-              uid: user.uid,
-            })
-          );
-          router.push("/home");
-          setInLogin(false);
-        }, 2000);
-      }
-    } catch (error) {
-      setInLogin(false);
-      setErrorMessage(t("login.invalid"));
-      setErrorAlert(true);
-      console.error("Error signing in with Google:", error);
-    }
-  };
-
-  // Handle the alert timeout
   useEffect(() => {
-    if (errorAlert) {
-      const timer = setTimeout(() => {
-        setErrorAlert(false);
-      }, 2000);
-      return () => clearTimeout(timer);
+    const userDataString = localStorage.getItem("userdata");
+    if (userDataString) {
+      const parsedUserData = JSON.parse(userDataString);
+      setUserData(parsedUserData);
     }
-  }, [errorAlert]);
+    setCity(localStorage.getItem("city"));
+  }, []);
 
-  return (
+  const handleLocationUpdate = () => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { latitude, longitude } = position.coords;
+      fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyDbyqQs6fkB0ZKoVwBDd27042c0FjW1yaQ`
+      )
+        .then((res) => res.json())
+        .then((res) => {
+          const cityComponent = res.results[0].address_components?.find(
+            (ele) => ele.types[0] === "administrative_area_level_1"
+          );
+          const cityName = cityComponent?.long_name || "";
+
+          setCity(cityName);
+          localStorage.setItem("city", cityName);
+          localStorage.setItem("latitude", latitude);
+          localStorage.setItem("longitude", longitude);
+          dispatch(
+            setUserLocation({ lat: latitude, lng: longitude, city: cityName })
+          );
+
+          // Show success toast
+          toast({
+            title: "Location Updated",
+            description: `Your location has been updated to ${cityName}.`,
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+        });
+    });
+  };
+
+  async function getEvents(lat, long) {
+    try {
+      const currentTime = new Date();
+
+      // Query events that have a future date
+      const eventsQuery = query(
+        collection(db, "events"),
+        where("date", ">=", currentTime),
+        where("type", "array-contains-any", selectedTypes.length > 0 ? selectedTypes : danceTypes)
+      );
+
+      const eventsSnapshot = await getDocs(eventsQuery);
+      const eventsInRange = [];
+
+      // Loop through events and calculate the distance
+      eventsSnapshot.forEach((doc) => {
+        const eventData = doc.data();
+
+        if (eventData.latlng) {
+          const eventLocation = {
+            latitude: eventData.latlng.latitude,
+            longitude: eventData.latlng.longitude,
+          };
+
+          // Calculate the distance between the event and the user's location
+          const distance = getDistance(
+            { latitude: lat, longitude: long },
+            {
+              latitude: eventLocation.latitude,
+              longitude: eventLocation.longitude,
+            }
+          );
+
+          const km = distance / 1000; // Convert distance to kilometers
+
+          // If the event is within 20 kilometers, add its ID to the array
+          if (km <= 20) {
+            eventsInRange.push(doc.id);
+          }
+        }
+      });
+
+      // Return the array of event IDs
+      return eventsInRange;
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      return [];
+    }
+  }
+  async function getCourses(lat, long) {
+    try {
+      const currentTime = new Date();
+
+      // Query events that have a future date
+      const eventsQuery = query(
+        collection(db, "courses"),
+        where("date", ">=", currentTime),
+        where("type", "array-contains-any", selectedTypes.length > 0 ? selectedTypes : danceTypes)
+      );
+
+      const eventsSnapshot = await getDocs(eventsQuery);
+      const eventsInRange = [];
+
+      // Loop through events and calculate the distance
+      eventsSnapshot.forEach((doc) => {
+        const eventData = doc.data();
+
+        if (eventData.latlng) {
+          const eventLocation = {
+            latitude: eventData.latlng.latitude,
+            longitude: eventData.latlng.longitude,
+          };
+
+          // Calculate the distance between the event and the user's location
+          const distance = getDistance(
+            { latitude: lat, longitude: long },
+            {
+              latitude: eventLocation.latitude,
+              longitude: eventLocation.longitude,
+            }
+          );
+
+          const km = distance / 1000; // Convert distance to kilometers
+
+          // If the event is within 20 kilometers, add its ID to the array
+          if (km <= 20) {
+            eventsInRange.push(doc.id);
+          }
+        }
+      });
+
+      // Return the array of event IDs
+      return eventsInRange;
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      return [];
+    }
+  }
+  const handlecontinue = () => {
+    const lat = localStorage.getItem("latitude");
+    const long = localStorage.getItem("longitude");
+    getEvents(lat, long).then((events) => {
+      const eventIdsString = events.join(",");
+
+      router.push({
+        pathname: "/events", // the target page
+        query: { eventIds: eventIdsString },
+      });
+    });
+  };
+  const handleSearchCourses = () => {
+    const lat = localStorage.getItem("latitude");
+    const long = localStorage.getItem("longitude");
+    getCourses(lat, long).then((courses) => {
+      const courseIdsString = courses.join(",");
+
+      router.push({
+        pathname: "/courses", // the target page
+        query: { courseIds: courseIdsString },
+      });
+    });
+  };
+  useEffect(() => {
+    if (localStorage.getItem("userId")) {
+      setLoggedIn(true);
+    }
+  },[]);
+    return (
     <Box
       display="flex"
-      alignItems="center"
-      justifyContent="center"
+      p={10}
       flexDirection="column"
-      overflow="auto"
-      height="100vh"
+      justifyContent={"center"}
+      position="relative"
+      overflow={"auto"}
+      height={"100vh"}
+      gap={15}
       backgroundSize={"cover"}
       backgroundImage="url('/assets/backgroundImage.png')"
     >
-      <Title name={"Login"} />
-      <Head>
-        <title>Login</title>
-      </Head>
-      <Box display="flex" justifyContent="center" alignItems="center" gap={3}>
-        <Image src={Logo} width={50} height={50} objectFit="cover" alt="Logo" />
-        <Text color="white" fontSize={24} fontWeight={600}>
-          Salsabachatero
+      <Title name={"Home"} />
+      {loggedIn ? (<Box
+        borderTopRadius={"10px"}
+        w="auto"
+        h={"150px"}
+        pos={"absolute"}
+        top={0}
+        left={0}
+        ml={2}
+        display={"flex"}
+        alignItems={"center"}
+        flexDirection={"column"}
+        mt={2}
+        cursor={"pointer"}
+        onClick={()=> router.push("/profile")}
+      >
+         <Avatar
+              src={userData["photo_url"] ? userData["photo_url"] : manImg}
+              size="md"
+              />
+        <Text fontSize={"18px"} color="white" fontWeight={400}  textAlign={"center"}>
+          {userData["display_name"]}
         </Text>
+      </Box>):(
+        <Button
+        pos={"absolute"}
+        top={0}
+        left={4}
+        m={4}
+        h={"auto"}
+        maxW={"fit-content"}
+        p={4}
+        fontSize={"14px"}
+        borderRadius={"3xl"}
+        mx={"auto"}
+        bgColor={"#c4ecff"}
+        onClick={() => router.push("/login")} //() => router.push("/events")
+      >
+        Log in
+      </Button>
+      )}
+      {/* <Text
+        color="#f9cf58"
+        style={{ fontSize: "28px" }}
+        fontWeight={600}
+        textAlign={"center"}
+      >
+        Salsabachatero
+      </Text> */}
+      {/* the center of the page */}
+      <Box
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        gap={3}
+        flexDirection={"column"}
+      >
+        <Text
+          color="white"
+          style={{ fontSize: "20px" }}
+          fontWeight={600}
+          textAlign={"center"}
+        >
+          Choose your favourite type
+        </Text>
+        <Box display="flex" gap={3}>
+          {danceTypes.map((type) => (
+            <Box
+              key={type}
+              onClick={() => handleSelectType(type)}
+              cursor="pointer"
+              borderRadius="50%"
+              p={4}
+              bg={selectedTypes.includes(type) ? "lightgreen" : "#add8e6"}
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              width="70px"
+              height="70px"
+              color="black"
+              fontWeight={600}
+              style={{ fontSize: "14px" }}
+              transition="background-color 0.3s ease"
+            >
+              {type}
+            </Box>
+          ))}
+        </Box>
+        <Text
+          color="white"
+          style={{ fontSize: "20px" }}
+          fontWeight={600}
+          textAlign={"center"}
+        >
+          Where do you want to dance?
+        </Text>
+        <Box
+          display={"flex"}
+          justifyContent={"center"}
+          alignItems={"center"}
+          gap={2}
+          pos={"relative"}
+        >
+          {/* {showplaces && (
+            <Button
+              onClick={() => setShowplaces(!showplaces)}
+              borderRadius={"3xl"}
+              px={8}
+              maxW={"fit-content"}
+            >
+              Enter your city
+            </Button>
+          )} */}
+          <AdressMap setShowplaces={setShowplaces} />
+
+          <Icon
+            as={IoIosPin}
+            border={"1px solid #4b39ef"}
+            borderRadius={"50%"}
+            bgColor={"#c4ecff"}
+            w={8}
+            h={8}
+            color="black"
+            onClick={handleLocationUpdate}
+            cursor="pointer"
+          />
+        </Box>
+      {city && <Text
+          color="red"
+          style={{ fontSize: "18px" }}
+          fontWeight={400}
+          textAlign={"center"}
+        >
+         Continue with {city}
+        </Text>}
+        <Box
+          display={"flex"}
+          flexWrap={"nowrap"}
+          justifyContent={"center"}
+          alignItems={"center"}
+        >
+          <Button
+            h={"auto"}
+            borderRadius={"3xl"}
+            mx={"auto"}
+            mr={4}
+            fontSize={["14px","md"]}
+            px={[".5rem",".5rem", "1rem", "1rem", "1rem"]}
+            py={["1rem","1rem", "1rem", "1rem", "1rem"]}
+            bgColor={"#c4ecff"}
+            whiteSpace={"break-spaces"}
+            onClick={handleSearchCourses} //() => router.push("/events")
+          >
+            Find dance courses
+          </Button>
+          <Button
+            h={"auto"}
+            maxW={"fit-content"}
+            px={8}
+            py={4}
+            fontSize={["14px","md"]}
+            borderRadius={"3xl"}
+            mx={"auto"}
+            bgColor={"#c4ecff"}
+            onClick={handlecontinue} //() => router.push("/events")
+          >
+            Continue
+          </Button>
+        </Box>
       </Box>
       <Box
-        width="auto"
-        padding="20px"
-        backgroundColor="white"
-        borderRadius="12px"
-        boxShadow="0px 4px 12px rgba(0, 0, 0, 0.1)"
+        display={"flex"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        flexDirection={"column"}
+        gap={3}
+        pt={15}
+        mt={"10"}
       >
-        <Heading
-          textAlign="center"
-          marginBottom="10px"
-          fontSize="2xl"
-          fontWeight="bold"
-          color="#333"
-        >
-          Welcome Back{" "}
-        </Heading>
-        <Text
-          marginBottom="10px"
-          color="#555"
-          width={["auto", "70%"]}
-          textAlign="center"
-          marginX="auto"
-        >
-          Fill out the information below in order to access your account.
-        </Text>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Input
-            paddingY="12px"
-            placeholder={t("login.email")}
-            border="1px solid #ccc"
-            borderRadius="8px"
-            _focusVisible={{ outline: "none", borderColor: "#4b39ef" }}
-            {...register("email", {
-              required: t("user.loginrequired"),
-              pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-            })}
-            marginBottom="10px"
-          />
-          <Box position="relative" marginBottom="10px">
-            <Input
-              paddingY="12px"
-              placeholder={t("login.password")}
-              type={passwordVisible ? "text" : "password"}
-              border="1px solid #ccc"
-              borderRadius="8px"
-              _focusVisible={{ outline: "none", borderColor: "#4b39ef" }}
-              {...register("passwordVal", {
-                required: t("user.passwordrequired"),
-                minLength: {
-                  value: 6,
-                  message: t("user.passwordminimumlenght"),
-                },
-              })}
-            />
-            {passwordVisible ? (
-              <AiFillEye
-                onClick={() => setPasswordVisible(false)}
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  right: "12px",
-                  transform: "translateY(-50%)",
-                  cursor: "pointer",
-                  fontSize: "1.5rem",
-                  color: "#808080",
-                }}
-              />
-            ) : (
-              <AiFillEyeInvisible
-                onClick={() => setPasswordVisible(true)}
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  right: "12px",
-                  transform: "translateY(-50%)",
-                  cursor: "pointer",
-                  fontSize: "1.5rem",
-                  color: "#808080",
-                }}
-              />
-            )}
-          </Box>
-
-          <Button
-            width="100%"
-            backgroundColor="#4b39ef"
-            color="white"
-            paddingY="12px"
-            borderRadius="8px"
-            _hover={{ backgroundColor: "#6c61cd" }}
-            isLoading={inLogin}
-            type="submit"
-            marginBottom="10px"
-          >
-            Sign In
-          </Button>
-        </form>
-        <Text textAlign="center" marginBottom="10px" color="#555">
-          Or sign in with
-        </Text>
         <Button
-          width="100%"
-          backgroundColor="white"
-          border="1px solid #ccc"
-          paddingY="12px"
-          borderRadius="8px"
-          onClick={handleGoogleSignIn}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          marginBottom="10px"
+          maxW={"fit-content"}
+          px={8}
+          borderRadius={"3xl"}
+          mx={"auto"}
+          bgColor={"#c4ecff"}
+          onClick={() => router.push("/addEvent")}
         >
-          <FcGoogle style={{ fontSize: "1.5rem", marginRight: "8px" }} />
-          Sign In with Google
+          Publish your Event here
         </Button>
-        <Text
-          textAlign="center"
-          marginBottom="10px"
-          color="#555"
-          style={{ fontSize: "14px !important" }}
-        >
-          {t("don't")}
-          <Link
-            href={"/register"}
-            style={{ color: "#4b39ef", marginLeft: "4px", fontSize: "16px" }}
-          >
-            Create Account
-          </Link>
-        </Text>
         <Button
-          width="100%"
-          backgroundColor="#eee"
-          paddingY="12px"
-          onClick={() => router.push("/forgot")}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
+          maxW={"fit-content"}
+          px={8}
+          borderRadius={"3xl"}
+          mx={"auto"}
+          bgColor={"#c4ecff"}
+          onClick={() => router.push("/addCourse")}
         >
-          Forgot Password?
+          Publish your Courses here
         </Button>
-
-        {errorAlert && (
-          <Alert status={messagetype} marginBottom="10px">
-            <AlertIcon />
-            {errorMessage}
-          </Alert>
-        )}
-        <HStack justifyContent="center" fontSize="sm" spacing="1">
-          <Text>{t("login.signupmessage")} </Text>
-          <Link href="/signup">
-            <Text color="#4b39ef">{t("signup.register")}</Text>
-          </Link>
-        </HStack>
+        <Button
+          maxW={"fit-content"}
+          px={8}
+          borderRadius={"3xl"}
+          mx={"auto"}
+          bgColor={"#c4ecff"}
+          onClick={() => router.push("/favEvents")}
+          gap={2}
+        >
+          <Icon as={FaRegHeart} w={6} h={6} color="red.400" /> Your favourite
+          Events
+        </Button>
       </Box>
     </Box>
   );
-}
+};
+
+export default Index;

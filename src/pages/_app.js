@@ -15,7 +15,7 @@ export default function App({ Component, pageProps }) {
   useEffect(() => {
    
     if (localStorage.getItem("userId")) {
-      router.push("/home");
+      router.push("/");
     }
   }, []);
 
