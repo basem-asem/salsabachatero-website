@@ -213,6 +213,34 @@ const Index = () => {
       setLoggedIn(true);
     }
   },[]);
+  const handleAddEvent= () => {
+    if (localStorage.getItem("userId")) {
+      router.push("/addEvent")
+    }else {
+      router.push("/login")
+      toast({
+        title: "Login Required",
+        description: "Please log in to add an event.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }
+  const handleAddCourse= () => {
+    if (localStorage.getItem("userId")) {
+      router.push("/addCourse")
+    }else {
+      router.push("/login")
+      toast({
+        title: "Login Required",
+        description: "Please log in to add an course.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }
     return (
     <Box
       display="flex"
@@ -411,7 +439,7 @@ const Index = () => {
           borderRadius={"3xl"}
           mx={"auto"}
           bgColor={"#c4ecff"}
-          onClick={() => router.push("/addEvent")}
+          onClick={handleAddEvent}
         >
           Publish your Event here
         </Button>
@@ -421,11 +449,11 @@ const Index = () => {
           borderRadius={"3xl"}
           mx={"auto"}
           bgColor={"#c4ecff"}
-          onClick={() => router.push("/addCourse")}
+          onClick={handleAddCourse}
         >
           Publish your Courses here
         </Button>
-        <Button
+        {loggedIn && <Button
           maxW={"fit-content"}
           px={8}
           borderRadius={"3xl"}
@@ -436,7 +464,7 @@ const Index = () => {
         >
           <Icon as={FaRegHeart} w={6} h={6} color="red.400" /> Your favourite
           Events
-        </Button>
+        </Button>}
       </Box>
     </Box>
   );
