@@ -33,7 +33,7 @@ const Index = () => {
       gap={5}
       mx={5}
     >
-      <Title name={"Home"} />
+      <Title name={"Courses"} />
       <Icon
         pos={"absolute"}
         m={2}
@@ -42,7 +42,7 @@ const Index = () => {
         h={12}
         color="#a16aa1"
         cursor={"pointer"}
-        onClick={() => router.push("/home")}
+        onClick={() => router.push("/")}
       />
       <Text color="#b42d29" style={{fontSize:"24px"}} fontWeight={600} textAlign={"center"}>
       Dance Courses
