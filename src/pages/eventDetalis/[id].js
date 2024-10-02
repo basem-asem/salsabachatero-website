@@ -136,7 +136,7 @@ const Index = () => {
         h={8}
         color="#a16aa1"
         cursor={"pointer"}
-        onClick={() => router.push("/home")}
+        onClick={() => router.push("/")}
       />
       {/* Event Title and Favorite Section */}
       <Box textAlign="center" paddingY={4}>
