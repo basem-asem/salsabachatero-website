@@ -31,7 +31,7 @@ const Index = () => {
         h={12}
         color="#a16aa1"
         cursor={"pointer"}
-        onClick={() => router.push("/home")}
+        onClick={() => router.push("/")}
       />
       <Text color="#f9cf58" fontSize={30} fontWeight={600} textAlign={"center"}>
         Salsabachatero

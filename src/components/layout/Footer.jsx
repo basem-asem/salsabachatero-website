@@ -15,7 +15,7 @@ const Footer = () => {
   const {t} = useTranslation()
   let arr = [
     {
-      link: "/home",
+      link: "/",
       name: t("home"),
     },
     {

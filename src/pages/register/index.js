@@ -96,7 +96,7 @@ const Index = () => {
 
           setAlert(t(alertMassage), "success", true);
           setTimeout(() => {
-            router.push("/home");
+            router.push("/");
             setInLogin(false);
           }, 2000);
         })
@@ -127,7 +127,7 @@ const Index = () => {
         setTimeout(() => {
           localStorage.setItem("userId", user.uid);
           localStorage.setItem("userdata", JSON.stringify(userdocSnap.data()));
-          router.push("/home");
+          router.push("/");
           setInLogin(false);
         }, 2000);
       } else {
@@ -156,7 +156,7 @@ const Index = () => {
               uid: user.uid,
             })
           );
-          router.push("/home");
+          router.push("/");
           setInLogin(false);
         }, 2000);
       }

@@ -179,7 +179,7 @@ const EventForm = () => {
         duration: 5000,
         isClosable: true,
       });
-      router.push("/home");
+      router.push("/");
     } catch (error) {
       toast({
         title: "Failed to add Event!",

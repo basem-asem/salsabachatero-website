@@ -52,7 +52,7 @@ const Contact = () => {
   const handleSubmit = async () => {
     try {
       await Create_Update_Doc("contact_us", formData);
-      router.push("/home")
+      router.push("/")
       alert("Form submitted successfully!");
     } catch (error) {
       console.error("Error submitting form:", error);
